@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, ShieldAlert, ShieldQuestion, Loader2, FileText, Download, Bot } from "lucide-react";
-import { friendlyStatusLabel } from "@/lib/labels";
+import { ShieldCheck, ShieldAlert, ShieldQuestion, Loader2, FileText, Download, Bot, Sparkles, ChevronDown } from "lucide-react";
+import { friendlyStatusLabel, friendlyToolLabel } from "@/lib/labels";
+import { ProposalCard } from "@/components/ProposalCard";
 
 interface Finding {
   regulationCode: string;
@@ -21,6 +22,13 @@ interface Followup {
   note: string;
   raisedBy: "agent" | "user";
   createdAt: string;
+}
+
+interface AgentInvestigation {
+  regulationCode: string;
+  report: string;
+  steps: { step: number; tool: string; args: Record<string, unknown>; result: unknown }[];
+  agentic: boolean;
 }
 
 function csvEscape(value: string): string {
@@ -55,6 +63,8 @@ const STATUS_STYLE: Record<Finding["status"], { icon: typeof ShieldCheck; card: 
 export default function CompliancePage() {
   const [findings, setFindings] = useState<Finding[] | null>(null);
   const [followups, setFollowups] = useState<Followup[]>([]);
+  const [investigating, setInvestigating] = useState<string | null>(null);
+  const [investigations, setInvestigations] = useState<Record<string, AgentInvestigation>>({});
 
   useEffect(() => {
     fetch("/api/compliance")
@@ -64,6 +74,21 @@ export default function CompliancePage() {
       .then((r) => r.json())
       .then((d) => setFollowups(d.followups || []));
   }, []);
+
+  async function investigate(regulationCode: string) {
+    setInvestigating(regulationCode);
+    try {
+      const res = await fetch("/api/compliance/investigate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regulationCode }),
+      });
+      const data = await res.json();
+      setInvestigations((m) => ({ ...m, [regulationCode]: data }));
+    } finally {
+      setInvestigating(null);
+    }
+  }
 
   const gapCount = findings?.filter((f) => f.status === "gap").length ?? 0;
 
@@ -76,7 +101,9 @@ export default function CompliancePage() {
           </h1>
           <p className="text-sm text-text-muted mt-1 max-w-xl">
             Compares your regulations against current procedures and inspection records, and flags
-            anything that looks missing or out of date — before an auditor finds it.
+            anything that looks missing or out of date — before an auditor finds it. This list
+            itself is rule-based (keyword matching, not AI) — use &quot;Investigate with AI&quot; on any
+            regulation for an agent that actually reads and reasons about it.
           </p>
         </div>
         {findings && findings.length > 0 && (
@@ -135,6 +162,7 @@ export default function CompliancePage() {
           {findings.map((f) => {
             const style = STATUS_STYLE[f.status];
             const Icon = style.icon;
+            const investigation = investigations[f.regulationCode];
             return (
               <div key={f.regulationCode} className={`rounded-xl border p-4 space-y-2 ${style.card}`}>
                 <div className="flex items-start justify-between gap-2">
@@ -154,6 +182,52 @@ export default function CompliancePage() {
                       <span key={d.id} className="flex items-center gap-1 text-[10px] text-text-muted bg-canvas/60 px-1.5 py-0.5 rounded">
                         <FileText size={10} /> {d.title}
                       </span>
+                    ))}
+                  </div>
+                )}
+
+                {!investigation && (
+                  <button
+                    onClick={() => investigate(f.regulationCode)}
+                    disabled={investigating === f.regulationCode}
+                    className="flex items-center gap-1.5 text-xs font-medium text-accent hover:underline disabled:opacity-60 pt-1"
+                  >
+                    {investigating === f.regulationCode ? (
+                      <Loader2 size={12} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={12} />
+                    )}
+                    {investigating === f.regulationCode ? "Investigating..." : "Investigate with AI"}
+                  </button>
+                )}
+
+                {investigation && (
+                  <div className="pt-2 border-t border-border/60 space-y-2">
+                    <div
+                      className={`flex items-center gap-1.5 text-[10px] px-2 py-1 rounded-md border w-fit ${
+                        investigation.agentic ? "border-accent/40 bg-accent/10 text-accent" : "border-warning/40 bg-warning/10 text-warning"
+                      }`}
+                    >
+                      <Bot size={11} />
+                      {investigation.agentic
+                        ? `Investigated in ${investigation.steps.length} step${investigation.steps.length === 1 ? "" : "s"} — it decided what to check`
+                        : "Offline rule-based check (connect an AI key for real reasoning)"}
+                    </div>
+                    {investigation.steps.length > 0 && (
+                      <details className="text-xs">
+                        <summary className="text-text-muted cursor-pointer flex items-center gap-1">
+                          <ChevronDown size={12} /> What it checked
+                        </summary>
+                        <div className="pl-4 mt-1 space-y-1 text-text-muted">
+                          {investigation.steps.map((s, i) => (
+                            <div key={i}>{friendlyToolLabel(s.tool)}</div>
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                    <p className="text-sm text-text whitespace-pre-wrap">{investigation.report}</p>
+                    {investigation.steps.map((s, i) => (
+                      <ProposalCard key={i} result={s.result} />
                     ))}
                   </div>
                 )}

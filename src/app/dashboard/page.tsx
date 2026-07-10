@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, FileText, Network, ShieldCheck, RefreshCw, Clock, Search, Bot, ListChecks, TrendingUp, AlertTriangle } from "lucide-react";
+import { MessageSquare, FileText, Network, ShieldCheck, RefreshCw, Clock, Search, Bot, ListChecks, TrendingUp, AlertTriangle, Sparkles, ChevronDown } from "lucide-react";
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { Role } from "@/lib/types";
+import { friendlyToolLabel } from "@/lib/labels";
+import { ProposalCard } from "@/components/ProposalCard";
 
 interface Stats {
   docCount: number;
@@ -18,6 +20,13 @@ interface DigestItem {
   kind: "compliance_gap" | "trend" | "new_document";
   title: string;
   detail: string;
+}
+
+interface SweepResult {
+  equipmentTag: string;
+  report: string;
+  steps: { step: number; tool: string; args: Record<string, unknown>; result: unknown }[];
+  agentic: boolean;
 }
 
 const NAV_CARDS = [
@@ -57,6 +66,8 @@ export default function Dashboard() {
   const [seeding, setSeeding] = useState(false);
   const [loading, setLoading] = useState(true);
   const [digestItems, setDigestItems] = useState<DigestItem[] | null>(null);
+  const [sweeping, setSweeping] = useState(false);
+  const [sweepResults, setSweepResults] = useState<SweepResult[] | null>(null);
 
   async function load() {
     setLoading(true);
@@ -90,6 +101,18 @@ export default function Dashboard() {
     await fetch("/api/seed", { method: "POST" });
     await load();
     setSeeding(false);
+  }
+
+  async function sweep() {
+    setSweeping(true);
+    setSweepResults(null);
+    try {
+      const res = await fetch("/api/rca/sweep", { method: "POST" });
+      const data = await res.json();
+      setSweepResults(data.results || []);
+    } finally {
+      setSweeping(false);
+    }
   }
 
   const orderedCards = ROLE_ORDER[role].map((href) => NAV_CARDS.find((c) => c.href === href)!);
@@ -137,9 +160,21 @@ export default function Dashboard() {
       </div>
 
       {digestItems && digestItems.some((i) => i.kind !== "new_document") && (
-        <div className="rounded-xl border border-border bg-surface p-5">
-          <div className="flex items-center gap-2 text-text-secondary font-medium mb-3">
-            <AlertTriangle size={16} className="text-warning" /> Needs your attention
+        <div className="rounded-xl border border-border bg-surface p-5 space-y-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-2 text-text-secondary font-medium">
+              <AlertTriangle size={16} className="text-warning" /> Needs your attention
+            </div>
+            {digestItems.some((i) => i.kind === "trend") && (
+              <button
+                onClick={sweep}
+                disabled={sweeping}
+                className="flex items-center gap-1.5 text-xs font-medium bg-accent hover:bg-accent-strong disabled:opacity-60 text-accent-fg rounded-md px-3 py-1.5"
+              >
+                {sweeping ? <RefreshCw size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {sweeping ? "Investigating all trending equipment..." : "Investigate all trending equipment"}
+              </button>
+            )}
           </div>
           <div className="space-y-2">
             {digestItems
@@ -159,6 +194,43 @@ export default function Dashboard() {
                 </div>
               ))}
           </div>
+
+          {sweepResults && sweepResults.length > 0 && (
+            <div className="pt-3 border-t border-border space-y-3">
+              <div className="text-xs uppercase tracking-wide text-text-muted">
+                Autonomous sweep results — {sweepResults.length} equipment investigated automatically
+              </div>
+              {sweepResults.map((r) => (
+                <div key={r.equipmentTag} className="rounded-lg bg-canvas/60 p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Bot size={13} className="text-accent" />
+                    <span className="text-sm font-medium text-text">{r.equipmentTag}</span>
+                    {r.agentic && (
+                      <span className="text-[10px] text-accent bg-accent/10 border border-accent/30 rounded-full px-2 py-0.5">
+                        {r.steps.length} step{r.steps.length === 1 ? "" : "s"}, autonomous
+                      </span>
+                    )}
+                  </div>
+                  {r.steps.length > 0 && (
+                    <details className="text-xs">
+                      <summary className="text-text-muted cursor-pointer flex items-center gap-1">
+                        <ChevronDown size={11} /> What it checked
+                      </summary>
+                      <div className="pl-4 mt-1 text-text-muted space-y-0.5">
+                        {r.steps.map((s, i) => (
+                          <div key={i}>{friendlyToolLabel(s.tool)}</div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                  <p className="text-xs text-text-secondary whitespace-pre-wrap">{r.report}</p>
+                  {r.steps.map((s, i) => (
+                    <ProposalCard key={i} result={s.result} />
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

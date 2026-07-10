@@ -4,34 +4,50 @@ Living checklist. Updated as work progresses — see "Log" at the bottom for a r
 
 ## Is this agentic, honestly?
 
-**Two parts of the system are agentic in the strict sense, and both fall back to something
-explicitly non-agentic if there's no API key or the agent loop fails.**
+**Three parts of the system are agentic in the strict sense, and all three fall back to something
+explicitly non-agentic if there's no API key or the agent loop fails. All three also share the
+same tool set and the same rule: they can propose an action, never execute one — only an explicit
+user click actually creates or flags anything.**
 
-- `/chat` **is agentic**: `src/lib/chatAgent.ts` hands the copilot the same 4 tools as the RCA
-  agent (`get_equipment_history`, `get_colocated_equipment`, `get_compliance_status`,
-  `search_documents`) via Gemini function calling, and the model decides for itself which to call,
-  in what order, and when it has enough evidence to answer — instead of the fixed
-  retrieve-then-generate pass it used to always run. Verified live: asked "Show me all maintenance
-  history connected to CT-02," it chose `get_equipment_history` on its own and cited the correct 5
-  documents. Falls back to the original fixed RAG pipeline (single retrieval pass, single
-  generation call, no tool selection) if no API key or the agent loop fails — that fallback path
-  is explicitly not agentic, and the UI/API response says so (`agentic: false`).
-- `/rca` **is agentic**: Gemini function calling over the same 4 tools, and the model decides for
-  itself which to call, with what arguments, in what order, and when it has enough evidence to
-  stop (capped at 6 steps as a safety bound, not a script). Verified live on C-301: it autonomously
-  chose `get_equipment_history` → `get_colocated_equipment` → `get_compliance_status` in that
-  order — nobody told it that sequence — then produced a cited RCA report. Falls back to a fixed,
-  explicitly-labeled non-agentic correlation if no API key is set.
-- `/compliance` is a **deterministic rule checker**: regex keyword matching + a fixed graph
-  traversal. Zero LLM involvement. Calling it an "agent" would be aspirational labeling, not
-  accurate — it's not claimed as one anywhere in the UI.
+- `/chat` **is agentic**: `src/lib/chatAgent.ts` hands the copilot a shared tool set (equipment
+  history, co-located equipment, compliance status, document search, trend checks, and two
+  propose-only action tools) via Gemini function calling, and the model decides for itself which
+  to call, in what order, and when it has enough evidence to answer. Verified live: asked "Show me
+  all maintenance history connected to CT-02," it chose `get_equipment_history` on its own and
+  cited the correct 5 documents. Falls back to the original fixed RAG pipeline if no API key or
+  the agent loop fails — explicitly labeled `agentic: false`.
+- `/rca` **is agentic**: the same tool set, and the model decides for itself which to call, with
+  what arguments, in what order, and when it has enough evidence to stop (capped at 6 steps).
+  Verified live on C-301: it autonomously ran a 6-step investigation — history, co-located
+  equipment, trend check, compliance status — then, unprompted, drafted both a work order proposal
+  and a compliance follow-up proposal, both confirmed through the UI into real records. Falls back
+  to a fixed, explicitly-labeled non-agentic correlation if no API key is set.
+- `/compliance`'s regulation **list** is still a deterministic rule checker (regex keyword
+  matching + a fixed graph traversal, zero LLM involvement) — that part is honestly not agentic.
+  But each regulation now has an **"Investigate with AI"** option (`src/lib/complianceAgent.ts`)
+  that is agentic: it reads the regulation's full text, decides for itself what else to check
+  (equipment history, trend data, related documents), and reasons about whether it's actually
+  satisfied rather than scanning for gap-sounding keywords — then can propose a follow-up if it
+  finds a real issue. Verified live on REG-OISD-001: it read the regulation text, checked CT-02's
+  history and C-301's vibration trend, and produced a reasoned gap verdict citing the specific
+  deferred work order and near-miss report, plus a drafted follow-up. Falls back to the same
+  rule-based check if no API key is set.
+- **Batch-agentic**: `/api/rca/sweep` (surfaced on the dashboard as "Investigate all trending
+  equipment") finds everything currently trending toward its alarm threshold and runs the RCA
+  agent on each automatically — no per-equipment manual step. Capped at 3 equipment tags per call
+  since each investigation is itself several Gemini calls against a 15 req/min free-tier quota.
+  Verified live: found CT-02 and C-301 both trending, investigated both automatically, 6 steps
+  each.
 - The graph explorer and document browser are plain CRUD/UI — no agent behavior implied there
   anyway.
 
-**Bottom line for the pitch:** claim precisely: two genuinely agentic tool-users (copilot + RCA,
-same tool set, both gracefully degrade to a fixed pipeline offline) plus a rule-based compliance
-checker. That's a more defensible and more interesting story than a blanket "AI agents" claim, and
-it's exactly the kind of precision a technical judge will reward.
+**Bottom line for the pitch:** claim precisely: three genuinely agentic tool-users (copilot, RCA,
+and per-regulation compliance investigation — all sharing one tool set, all gracefully degrading
+to a fixed/rule-based pipeline offline), one batch-agentic sweep built on top of them, and a
+rule-based compliance list underneath all of it. Every agent can propose an action; none of them
+can execute one without a human clicking confirm. That's a more defensible and more interesting
+story than a blanket "AI agents" claim, and it's exactly the kind of precision a technical judge
+will reward.
 
 ## Mockup / demo data — what exists
 
@@ -261,6 +277,38 @@ issue I can't fix from here. Checklist:
       rule-based vs. plain CRUD, matching the "Is this agentic, honestly?" section above rather
       than contradicting it), linked from the main nav and the landing page.
 
+## Done — two new agentic features: compliance investigation + autonomous sweep (this session)
+
+- [x] **`/compliance` gained a real agentic mode.** It had been repeatedly, honestly labeled "not
+      agentic" (rule-based keyword matching). Rather than leave that as a permanent asterisk, added
+      `src/lib/complianceAgent.ts`: a per-regulation "Investigate with AI" option that reads the
+      regulation's full text, decides for itself what else to check (equipment history, trend
+      data, related documents) via the same shared tool set as `/chat`/`/rca`, and produces a
+      reasoned verdict — with the same propose-not-write pattern for any follow-up it finds. This
+      is a materially different claim than the rule-based list above it: the list scans for
+      gap-sounding words in isolation, the agent actually reads what the regulation requires and
+      checks whether the plant's real records satisfy it. Verified live on REG-OISD-001: it read
+      the regulation, checked CT-02's deferred maintenance history and C-301's vibration trend, and
+      concluded "gap" with specific cited evidence (WO-2025-0142's undocumented deferral, linked to
+      C-301's repeat vibration trend and the NM-2025-07 near-miss) — a materially more grounded
+      verdict than "this text contains the word 'deferred.'" Falls back to the existing rule-based
+      check if no API key or the call fails.
+- [x] **Autonomous batch sweep** — `POST /api/rca/sweep`, surfaced on the dashboard as
+      "Investigate all trending equipment." Finds every equipment tag currently trending toward its
+      alarm threshold (`src/lib/predictive.ts`) and runs the RCA agent on each automatically, one
+      investigation after another with no per-equipment manual trigger — genuinely batch-agentic,
+      not just single-request-agentic. Capped at 3 equipment tags per call: each RCA investigation
+      is itself several Gemini calls, and this key's 15 req/min free-tier quota would reliably fail
+      partway through an uncapped sweep. Verified live: found CT-02 and C-301 both trending, swept
+      both automatically, 6 steps each, both producing findings and proposals rendered inline on
+      the dashboard.
+- [x] Fixed a bug caught while writing the test for this session's own work, not a real product
+      bug: an early Playwright text-selector matched the compliance page's description paragraph
+      (which mentions "Investigate with AI" in a sentence) in addition to the actual buttons,
+      making a click silently land on non-interactive text. Switched to `getByRole("button", ...)`
+      and confirmed the real click path works correctly — worth noting since it's a reminder that
+      broad text selectors in UI tests can produce false negatives that look like product bugs.
+
 ## Not started / stretch (incl. new feature ideas)
 
 Everything not yet built, in one list. What's left after this session is either genuinely
@@ -373,3 +421,17 @@ out of scope for an app with this data model, or needs an input I don't have acc
   work order document and a real compliance follow-up entry. Also added `/features`, a full,
   honestly-categorized tour of the app (agentic vs. rule-based vs. plain CRUD), linked from the
   nav and landing page. Full rebuild clean, all 25 routes present.
+- User asked for new feature ideas plus more agentic, in one go. Picked the two closest to the
+  existing agentic infrastructure rather than starting something unrelated: (1) gave `/compliance`
+  a real agentic mode (`complianceAgent.ts`) — it had been honestly flagged as rule-based in three
+  separate places in this file, so rather than leave that as a permanent caveat, built a
+  per-regulation "Investigate with AI" that reads the regulation's actual text and reasons about
+  it using the same shared tool set, instead of scanning for gap-sounding keywords. (2) built an
+  autonomous sweep (`/api/rca/sweep`) that finds everything trending toward alarm and investigates
+  all of it automatically, capped at 3 to respect the free-tier quota. Verified both live: the
+  compliance agent read REG-OISD-001, checked CT-02 and C-301's real history/trends, and produced
+  a cited gap verdict with a drafted follow-up; the sweep found CT-02 and C-301 both trending and
+  investigated both automatically, 6 steps each. Caught and fixed an overly-broad Playwright text
+  selector while testing (matched a description paragraph in addition to the real button) — a
+  testing artifact, not a product bug, but worth noting since it briefly looked like the button
+  wasn't working. Full rebuild clean, all 27 routes present.

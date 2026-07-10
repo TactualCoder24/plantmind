@@ -10,6 +10,7 @@ export const RCA_TOOL_LABELS: Record<string, string> = {
   check_trend: "Checking if readings are trending toward alarm",
   propose_work_order: "Drafting a work order proposal",
   propose_compliance_followup: "Drafting a compliance follow-up flag",
+  get_regulation_text: "Reading the full regulation text",
 };
 
 export function friendlyToolLabel(toolName: string): string {

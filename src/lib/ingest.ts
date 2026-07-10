@@ -2,7 +2,7 @@ import { randomUUID } from "crypto";
 import { DB, DocType, SourceDocument } from "@/lib/types";
 import { readDB, writeDB } from "@/lib/db";
 import { extractEntities } from "@/lib/extract";
-import { chunkText, embed } from "@/lib/embeddings";
+import { chunkText, embed, embedRemote, useRemoteEmbeddings } from "@/lib/embeddings";
 import { buildGraph } from "@/lib/graph";
 import { llmExtractFromFile } from "@/lib/llm";
 import { uploadRawFile } from "@/lib/storage";
@@ -14,9 +14,17 @@ export interface IngestInput {
   content: string;
 }
 
-function persistDocument(db: DB, doc: SourceDocument): void {
+async function embedChunks(textChunks: string[]): Promise<number[][]> {
+  // Whole-corpus decision, not per-chunk — see useRemoteEmbeddings() for why mixing schemes
+  // within one searchable corpus would silently corrupt retrieval.
+  if (useRemoteEmbeddings()) return embedRemote(textChunks);
+  return textChunks.map((t) => embed(t));
+}
+
+async function persistDocument(db: DB, doc: SourceDocument): Promise<void> {
   db.documents.push(doc);
   const textChunks = chunkText(doc.content);
+  const vectors = await embedChunks(textChunks);
   for (let i = 0; i < textChunks.length; i++) {
     db.chunks.push({
       id: randomUUID(),
@@ -25,14 +33,14 @@ function persistDocument(db: DB, doc: SourceDocument): void {
       documentType: doc.type,
       text: textChunks[i],
       index: i,
-      vector: embed(textChunks[i]),
+      vector: vectors[i],
     });
   }
   db.graph = buildGraph(db.documents);
 }
 
 export async function ingestDocument(input: IngestInput): Promise<SourceDocument> {
-  const db = readDB();
+  const db = await readDB();
   const entities = await extractEntities(input.content);
 
   const doc: SourceDocument = {
@@ -46,8 +54,8 @@ export async function ingestDocument(input: IngestInput): Promise<SourceDocument
     sourceKind: "text",
   };
 
-  persistDocument(db, doc);
-  writeDB(db);
+  await persistDocument(db, doc);
+  await writeDB(db);
   return doc;
 }
 
@@ -80,7 +88,7 @@ export async function ingestFile(input: IngestFileInput): Promise<IngestFileResu
     };
   }
 
-  const db = readDB();
+  const db = await readDB();
   const id = randomUUID();
   const { url: fileUrl } = await uploadRawFile(id, input.filename, input.base64Data, input.mimeType);
 
@@ -96,8 +104,8 @@ export async function ingestFile(input: IngestFileInput): Promise<IngestFileResu
     sourceKind: "scan",
   };
 
-  persistDocument(db, doc);
-  writeDB(db);
+  await persistDocument(db, doc);
+  await writeDB(db);
   return { document: doc };
 }
 
@@ -109,8 +117,8 @@ export async function ingestBatch(inputs: IngestInput[]): Promise<SourceDocument
   return results;
 }
 
-export function rebuildGraph(db: DB): DB {
+export async function rebuildGraph(db: DB): Promise<DB> {
   db.graph = buildGraph(db.documents);
-  writeDB(db);
+  await writeDB(db);
   return db;
 }

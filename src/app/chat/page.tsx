@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Send, FileText, Network, Loader2, ThumbsUp, ThumbsDown, Check } from "lucide-react";
+import Link from "next/link";
+import { Send, FileText, Network, Loader2, ThumbsUp, ThumbsDown, Check, Bot } from "lucide-react";
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { Citation } from "@/lib/types";
-import { confidenceLabel, formatGraphFact } from "@/lib/labels";
+import { confidenceLabel, formatGraphFact, friendlyToolLabel } from "@/lib/labels";
 
 interface Message {
   id: string;
@@ -15,6 +16,8 @@ interface Message {
   graphFacts?: string[];
   confidence?: number;
   rated?: "up" | "down";
+  agentic?: boolean;
+  steps?: { step: number; tool: string }[];
 }
 
 const SUGGESTED = [
@@ -59,6 +62,8 @@ export default function ChatPage() {
           citations: data.citations,
           graphFacts: data.graphFacts,
           confidence: data.confidence,
+          agentic: data.agentic,
+          steps: data.steps,
         },
       ]);
     } catch {
@@ -86,7 +91,8 @@ export default function ChatPage() {
       <div className="px-4 md:px-0 pt-4 pb-2">
         <h1 className="text-lg font-display font-semibold text-text">Ask a Question</h1>
         <p className="text-sm text-text-muted mt-1">
-          Answering for: {ROLE_LABELS[role]}. Every answer shows exactly which documents it came from.
+          Answering for: {ROLE_LABELS[role]}. It decides for itself which documents and records to
+          check, and every answer shows exactly where it came from.
         </p>
       </div>
 
@@ -117,6 +123,14 @@ export default function ChatPage() {
             >
               {m.text}
 
+              {m.role === "assistant" && m.agentic && m.steps && m.steps.length > 0 && (
+                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-accent bg-accent/10 border border-accent/30 rounded-md px-2 py-1 w-fit">
+                  <Bot size={11} />
+                  Worked it out in {m.steps.length} step{m.steps.length === 1 ? "" : "s"}:{" "}
+                  {m.steps.map((s) => friendlyToolLabel(s.tool)).join(" → ")}
+                </div>
+              )}
+
               {m.role === "assistant" && m.confidence !== undefined && (
                 <div className="mt-2 flex items-center gap-1.5 text-[10px] text-text-muted">
                   <div className="w-16 h-1.5 rounded-full bg-surface-2 overflow-hidden">
@@ -136,7 +150,9 @@ export default function ChatPage() {
                   </div>
                   {m.citations.map((c, i) => (
                     <div key={i} className="text-xs text-text-muted bg-canvas/60 rounded-md px-2 py-1.5">
-                      <span className="text-accent font-medium">[{i + 1}] {c.documentTitle}</span>
+                      <Link href={`/documents?id=${c.documentId}`} className="text-accent font-medium hover:underline">
+                        [{i + 1}] {c.documentTitle}
+                      </Link>
                       <span className="text-text-muted"> · {c.documentType.replace(/_/g, " ")}</span>
                       <div className="text-text-muted mt-0.5">{c.snippet}</div>
                     </div>

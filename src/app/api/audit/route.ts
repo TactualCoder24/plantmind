@@ -3,5 +3,6 @@ import { readDB } from "@/lib/db";
 
 export async function GET() {
   const db = await readDB();
-  return NextResponse.json({ graph: db.graph });
+  const entries = [...(db.auditLog || [])].reverse();
+  return NextResponse.json({ entries });
 }

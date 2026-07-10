@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useRole } from "@/lib/roleContext";
 import { useTheme } from "@/lib/themeContext";
+import { useAuth } from "@/lib/authContext";
 import { Role } from "@/lib/types";
 
 const ROLES: { role: Role; title: string; icon: typeof HardHat; blurb: string; asks: string }[] = [
@@ -54,6 +55,7 @@ export default function LandingPage() {
   const router = useRouter();
   const { setRole } = useRole();
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   function enterAs(role: Role) {
     setRole(role);
@@ -76,13 +78,22 @@ export default function LandingPage() {
           >
             {theme === "dark" ? <Sun size={15} /> : <Moon size={15} />}
           </button>
-          <Link
-            href="/login"
-            className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
-          >
-            <LogIn size={14} />
-            Sign in
-          </Link>
+          {user ? (
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
+            >
+              {user.email}
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
+            >
+              <LogIn size={14} />
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
 
@@ -190,7 +201,7 @@ export default function LandingPage() {
 
       <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-2 justify-between">
         <span>PlantMind — built for heavy industry.</span>
-        <span>No account required for this demo.</span>
+        <span>No account required to explore — sign in only if you want to save your own session.</span>
       </footer>
     </div>
   );

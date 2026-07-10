@@ -76,7 +76,7 @@ export async function runRcaAgent(db: DB, equipmentTag: string): Promise<RcaResu
 
       const responses = [];
       for (const call of calls) {
-        const toolResult = runRcaTool(db, call.name, (call.args as Record<string, unknown>) || {});
+        const toolResult = await runRcaTool(db, call.name, (call.args as Record<string, unknown>) || {});
         steps.push({
           step: steps.length + 1,
           tool: call.name,

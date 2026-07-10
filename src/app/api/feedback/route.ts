@@ -9,7 +9,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "question, answer and rating ('up' | 'down') are required" }, { status: 400 });
   }
 
-  const db = readDB();
+  const db = await readDB();
   const entry: Feedback = {
     id: randomUUID(),
     question: body.question,
@@ -19,13 +19,13 @@ export async function POST(req: Request) {
     createdAt: new Date().toISOString(),
   };
   db.feedback = [...(db.feedback || []), entry];
-  writeDB(db);
+  await writeDB(db);
 
   return NextResponse.json({ feedback: entry });
 }
 
 export async function GET() {
-  const db = readDB();
+  const db = await readDB();
   const feedback = db.feedback || [];
   const up = feedback.filter((f) => f.rating === "up").length;
   const down = feedback.filter((f) => f.rating === "down").length;

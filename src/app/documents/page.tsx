@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Upload, FileText, Image as ImageIcon, Loader2, Table } from "lucide-react";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Upload, FileText, Image as ImageIcon, Loader2, Table, Eye, X, ExternalLink } from "lucide-react";
 import { DocType } from "@/lib/types";
 
 interface DocSummary {
@@ -9,6 +10,7 @@ interface DocSummary {
   title: string;
   type: DocType;
   filename: string;
+  content: string;
   uploadedAt: string;
   entities: { equipmentTags: string[]; personnel: string[]; regulatoryRefs: string[] };
   fileUrl?: string;
@@ -30,6 +32,15 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 export default function DocumentsPage() {
+  return (
+    <Suspense fallback={null}>
+      <DocumentsPageInner />
+    </Suspense>
+  );
+}
+
+function DocumentsPageInner() {
+  const searchParams = useSearchParams();
   const [docs, setDocs] = useState<DocSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -37,6 +48,7 @@ export default function DocumentsPage() {
   const [form, setForm] = useState({ title: "", type: "sop" as DocType, content: "" });
   const [scanFile, setScanFile] = useState<File | null>(null);
   const [filter, setFilter] = useState<string>("all");
+  const [viewing, setViewing] = useState<DocSummary | null>(null);
 
   async function load() {
     setLoading(true);
@@ -44,10 +56,19 @@ export default function DocumentsPage() {
     const data = await res.json();
     setDocs(data.documents);
     setLoading(false);
+
+    // Deep-link support: /documents?id=<docId> (used by citation links elsewhere) opens the
+    // viewer for that document as soon as the list loads.
+    const wantedId = searchParams.get("id");
+    if (wantedId) {
+      const match = (data.documents as DocSummary[]).find((d) => d.id === wantedId);
+      if (match) setViewing(match);
+    }
   }
 
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleTextFile(file: File) {
@@ -237,15 +258,19 @@ export default function DocumentsPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-3">
           {filtered.map((d) => (
-            <div key={d.id} className="rounded-xl border border-border bg-surface p-4 space-y-2">
+            <button
+              key={d.id}
+              onClick={() => setViewing(d)}
+              className="text-left rounded-xl border border-border bg-surface p-4 space-y-2 hover:border-accent/60 transition-colors"
+            >
               <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   {d.sourceKind === "scan" ? (
                     <ImageIcon size={15} className="text-info shrink-0 mt-0.5" />
                   ) : (
                     <FileText size={15} className="text-accent shrink-0 mt-0.5" />
                   )}
-                  <span className="text-sm font-medium text-text">{d.title}</span>
+                  <span className="text-sm font-medium text-text truncate">{d.title}</span>
                 </div>
                 <span className="text-[10px] uppercase text-text-muted bg-canvas border border-border rounded px-1.5 py-0.5 shrink-0">
                   {d.type.replace("_", " ")}
@@ -266,8 +291,61 @@ export default function DocumentsPage() {
                   <Chip key={t} color="warning">{t}</Chip>
                 ))}
               </div>
-            </div>
+              <div className="flex items-center gap-1 text-xs text-accent pt-1">
+                <Eye size={12} /> View document
+              </div>
+            </button>
           ))}
+        </div>
+      )}
+
+      {viewing && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center p-4"
+          onClick={() => setViewing(null)}
+        >
+          <div
+            className="bg-surface border border-border rounded-xl max-w-2xl w-full max-h-[85vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-3 p-4 border-b border-border shrink-0">
+              <div>
+                <div className="text-sm font-medium text-text">{viewing.title}</div>
+                <div className="text-xs text-text-muted mt-0.5">
+                  {viewing.type.replace(/_/g, " ")} · added {new Date(viewing.uploadedAt).toLocaleDateString()}
+                </div>
+              </div>
+              <button onClick={() => setViewing(null)} aria-label="Close" className="text-text-muted hover:text-text shrink-0">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 space-y-3">
+              {viewing.fileUrl && viewing.sourceKind === "scan" && (
+                <a
+                  href={viewing.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs text-accent hover:underline w-fit"
+                >
+                  <ExternalLink size={12} /> Open original file
+                </a>
+              )}
+              {viewing.entities.equipmentTags.length + viewing.entities.regulatoryRefs.length + viewing.entities.personnel.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {viewing.entities.equipmentTags.map((t) => (
+                    <Chip key={t} color="accent">{t}</Chip>
+                  ))}
+                  {viewing.entities.regulatoryRefs.map((t) => (
+                    <Chip key={t} color="info">{t}</Chip>
+                  ))}
+                  {viewing.entities.personnel.map((t) => (
+                    <Chip key={t} color="warning">{t}</Chip>
+                  ))}
+                </div>
+              )}
+              <pre className="text-sm text-text whitespace-pre-wrap font-sans">{viewing.content}</pre>
+            </div>
+          </div>
         </div>
       )}
     </div>

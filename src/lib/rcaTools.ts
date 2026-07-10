@@ -50,8 +50,8 @@ export function getComplianceStatus(db: DB, equipmentTag: string) {
     }));
 }
 
-export function searchDocuments(db: DB, query: string) {
-  const top = retrieveTopChunks(query, db.chunks, 5);
+export async function searchDocuments(db: DB, query: string) {
+  const top = await retrieveTopChunks(query, db.chunks, 5);
   return top.map((c) => ({
     document: c.documentTitle,
     type: c.documentType,
@@ -86,7 +86,7 @@ export const RCA_TOOL_SPECS = [
 
 export type RcaToolName = (typeof RCA_TOOL_SPECS)[number]["name"];
 
-export function runRcaTool(db: DB, name: string, args: Record<string, unknown>): unknown {
+export async function runRcaTool(db: DB, name: string, args: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case "get_equipment_history":
       return getEquipmentHistory(db, String(args.equipmentTag || ""));

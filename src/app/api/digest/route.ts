@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { readDB } from "@/lib/db";
+import { buildDigest } from "@/lib/digest";
 
 export async function GET() {
   const db = await readDB();
-  return NextResponse.json({ graph: db.graph });
+  const digest = buildDigest(db);
+  return NextResponse.json(digest);
 }

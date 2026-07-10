@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageSquare, FileText, Network, ShieldCheck, RefreshCw, Clock, Search, Bot } from "lucide-react";
+import { MessageSquare, FileText, Network, ShieldCheck, RefreshCw, Clock, Search, Bot, ListChecks, TrendingUp, AlertTriangle } from "lucide-react";
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { Role } from "@/lib/types";
 
@@ -14,19 +14,26 @@ interface Stats {
   byType: Record<string, number>;
 }
 
+interface DigestItem {
+  kind: "compliance_gap" | "trend" | "new_document";
+  title: string;
+  detail: string;
+}
+
 const NAV_CARDS = [
   { href: "/chat", icon: MessageSquare, title: "Ask a Question", desc: "Ask in plain language, get an answer with sources" },
   { href: "/rca", icon: Bot, title: "Find Root Cause", desc: "Automatically investigate why equipment failed" },
   { href: "/documents", icon: FileText, title: "Documents", desc: "Add and browse everything that's been uploaded" },
   { href: "/graph", icon: Network, title: "How Everything Connects", desc: "See how equipment, people and records link up" },
   { href: "/compliance", icon: ShieldCheck, title: "Compliance Check", desc: "See what needs attention before an audit" },
+  { href: "/audit", icon: ListChecks, title: "Audit Log", desc: "Review what the copilot checked and cited" },
 ];
 
 // Same links, reordered so the most relevant thing for each role comes first.
 const ROLE_ORDER: Record<Role, string[]> = {
-  technician: ["/chat", "/documents", "/rca", "/graph", "/compliance"],
-  engineer: ["/rca", "/chat", "/graph", "/documents", "/compliance"],
-  compliance: ["/compliance", "/documents", "/chat", "/graph", "/rca"],
+  technician: ["/chat", "/documents", "/rca", "/graph", "/compliance", "/audit"],
+  engineer: ["/rca", "/chat", "/graph", "/documents", "/compliance", "/audit"],
+  compliance: ["/compliance", "/audit", "/documents", "/chat", "/graph", "/rca"],
 };
 
 const ROLE_WELCOME: Record<Role, { title: string; body: string }> = {
@@ -49,12 +56,18 @@ export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [seeding, setSeeding] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [digestItems, setDigestItems] = useState<DigestItem[] | null>(null);
 
   async function load() {
     setLoading(true);
-    const [docsRes, graphRes] = await Promise.all([fetch("/api/documents"), fetch("/api/graph")]);
+    const [docsRes, graphRes, digestRes] = await Promise.all([
+      fetch("/api/documents"),
+      fetch("/api/graph"),
+      fetch("/api/digest"),
+    ]);
     const docsData = await docsRes.json();
     const graphData = await graphRes.json();
+    const digestData = await digestRes.json();
     const byType: Record<string, number> = {};
     for (const d of docsData.documents) byType[d.type] = (byType[d.type] || 0) + 1;
     setStats({
@@ -64,6 +77,7 @@ export default function Dashboard() {
       edgeCount: graphData.graph.edges.length,
       byType,
     });
+    setDigestItems(digestData.items ?? []);
     setLoading(false);
   }
 
@@ -121,6 +135,32 @@ export default function Dashboard() {
         <StatCard label="Connections found" value={stats?.edgeCount ?? "—"} />
         <StatCard label="Document types" value={stats ? Object.keys(stats.byType).length : "—"} />
       </div>
+
+      {digestItems && digestItems.some((i) => i.kind !== "new_document") && (
+        <div className="rounded-xl border border-border bg-surface p-5">
+          <div className="flex items-center gap-2 text-text-secondary font-medium mb-3">
+            <AlertTriangle size={16} className="text-warning" /> Needs your attention
+          </div>
+          <div className="space-y-2">
+            {digestItems
+              .filter((i) => i.kind !== "new_document")
+              .slice(0, 5)
+              .map((i, idx) => (
+                <div key={idx} className="flex items-start gap-2 text-sm">
+                  {i.kind === "trend" ? (
+                    <TrendingUp size={14} className="text-warning shrink-0 mt-0.5" />
+                  ) : (
+                    <ShieldCheck size={14} className="text-danger shrink-0 mt-0.5" />
+                  )}
+                  <div>
+                    <div className="text-text font-medium">{i.title}</div>
+                    <div className="text-text-muted text-xs mt-0.5">{i.detail}</div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="rounded-xl border border-border bg-surface p-5">

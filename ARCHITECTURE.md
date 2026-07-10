@@ -84,14 +84,15 @@ dependency-free hackathon build:
   needs zero external database provisioning. The module boundary (`db.ts` / `retrieval.ts` /
   `graph.ts`) is exactly where a Postgres+pgvector swap (as originally planned) or Neo4j would
   slot in without touching API routes or UI.
-- **Raw file storage (built, optional)**: `src/lib/storage.ts` `uploadRawFile()` puts scanned/
-  photographed source files in a Supabase Storage bucket (`plant-documents`) if `SUPABASE_URL` +
-  `SUPABASE_SERVICE_ROLE_KEY` are set, and returns the public URL. Without those env vars, it
-  falls back to embedding the file as an inline `data:` URI directly on the document record — same
+- **Raw file storage (built and configured)**: `src/lib/storage.ts` `uploadRawFile()` puts
+  scanned/photographed source files in a Supabase Storage bucket (`plant-documents`) if
+  `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` are set, and returns the public URL. This
+  deployment has both set in `.env.local` — verified live by uploading a real file and confirming
+  it's served back from a `supabase.co/storage/v1/object/public/...` URL, not an inline data URI.
+  Without those env vars (e.g. a fresh clone that hasn't set up Supabase yet), it falls back to
+  embedding the file as an inline `data:` URI directly on the document record — same
   fallback-safe pattern as the LLM provider, so scan upload works with zero external setup and
-  upgrades automatically once Supabase is configured. To wire it up: create a Supabase project,
-  add a public Storage bucket named `plant-documents`, and set the two env vars in `.env.local`
-  (see `.env.local.example`).
+  upgrades automatically once Supabase is configured.
 
 **Open:** if there's time, swap the local hashed embeddings for real Gemini embeddings
 (`text-embedding-004`) for better semantic recall — current approach trades some recall for

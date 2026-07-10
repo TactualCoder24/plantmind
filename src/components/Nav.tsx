@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { MessageSquare, FileText, Network, ShieldCheck, LayoutDashboard, Wrench, Sun, Moon, LogIn } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { MessageSquare, FileText, Network, ShieldCheck, LayoutDashboard, Wrench, Sun, Moon, LogIn, LogOut, ListChecks } from "lucide-react";
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { useTheme } from "@/lib/themeContext";
+import { useAuth } from "@/lib/authContext";
 import { Role } from "@/lib/types";
 
 const ITEMS = [
@@ -14,6 +15,7 @@ const ITEMS = [
   { href: "/documents", label: "Documents", icon: FileText },
   { href: "/graph", label: "Connections", icon: Network },
   { href: "/compliance", label: "Compliance", icon: ShieldCheck },
+  { href: "/audit", label: "Audit Log", icon: ListChecks },
 ];
 
 // The marketing landing page and the auth form render their own minimal headers.
@@ -21,10 +23,17 @@ const NAV_HIDDEN_ROUTES = new Set(["/", "/login"]);
 
 export default function Nav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { role, setRole } = useRole();
   const { theme, toggleTheme } = useTheme();
+  const { user, signOut } = useAuth();
 
   if (NAV_HIDDEN_ROUTES.has(pathname)) return null;
+
+  async function handleSignOut() {
+    await signOut();
+    router.push("/");
+  }
 
   return (
     <>
@@ -67,13 +76,28 @@ export default function Nav() {
             ))}
           </select>
           <ThemeToggleButton theme={theme} onToggle={toggleTheme} />
-          <Link
-            href="/login"
-            className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
-          >
-            <LogIn size={14} />
-            Sign in
-          </Link>
+          {user ? (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-muted max-w-[140px] truncate" title={user.email}>
+                {user.email}
+              </span>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
+              >
+                <LogOut size={14} />
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-1.5 border border-border text-sm text-text-secondary hover:text-text hover:border-border-strong rounded-md px-3 py-1.5"
+            >
+              <LogIn size={14} />
+              Sign in
+            </Link>
+          )}
         </div>
       </header>
 
@@ -96,11 +120,28 @@ export default function Nav() {
             ))}
           </select>
           <ThemeToggleButton theme={theme} onToggle={toggleTheme} compact />
+          {user ? (
+            <button
+              onClick={handleSignOut}
+              aria-label="Sign out"
+              className="h-7 w-7 flex items-center justify-center rounded-md border border-border text-text-secondary"
+            >
+              <LogOut size={14} />
+            </button>
+          ) : (
+            <Link
+              href="/login"
+              aria-label="Sign in"
+              className="h-7 w-7 flex items-center justify-center rounded-md border border-border text-text-secondary"
+            >
+              <LogIn size={14} />
+            </Link>
+          )}
         </div>
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-canvas border-t border-border flex items-center justify-around py-1.5">
+      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-canvas border-t border-border flex items-center overflow-x-auto py-1.5">
         {ITEMS.map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
@@ -108,7 +149,7 @@ export default function Nav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 rounded-md text-[10px] ${
+              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-md text-[10px] shrink-0 whitespace-nowrap ${
                 active ? "text-accent" : "text-text-muted"
               }`}
             >

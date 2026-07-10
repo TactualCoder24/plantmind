@@ -7,7 +7,7 @@ export async function POST(req: Request) {
   if (!equipmentTag || !equipmentTag.trim()) {
     return NextResponse.json({ error: "equipmentTag is required" }, { status: 400 });
   }
-  const db = readDB();
+  const db = await readDB();
   const result = await runRcaAgent(db, equipmentTag.trim());
   return NextResponse.json(result);
 }

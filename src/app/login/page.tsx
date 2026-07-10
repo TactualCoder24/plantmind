@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Sun, Moon, Mail, Lock, LogIn } from "lucide-react";
+import { ArrowLeft, Sun, Moon, Mail, Lock, LogIn, UserPlus, CheckCircle2 } from "lucide-react";
 import { useTheme } from "@/lib/themeContext";
+import { useAuth } from "@/lib/authContext";
 
 // Google-icon glyph as inline SVG so we don't need an external asset for the (currently disabled) button.
 function GoogleGlyph() {
@@ -21,13 +22,40 @@ function GoogleGlyph() {
 export default function LoginPage() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { signIn, signUp, authAvailable } = useAuth();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmSent, setConfirmSent] = useState(false);
 
-  function submit(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    // Demo mode: there's no auth backend wired up yet — any credentials proceed to the dashboard.
-    router.push("/dashboard");
+    setError(null);
+
+    if (!authAvailable) {
+      // No Supabase auth configured in this environment — demo mode proceeds straight through.
+      router.push("/dashboard");
+      return;
+    }
+
+    setSubmitting(true);
+    if (mode === "signin") {
+      const { error } = await signIn(email, password);
+      setSubmitting(false);
+      if (error) return setError(error);
+      router.push("/dashboard");
+    } else {
+      const { error, needsEmailConfirm } = await signUp(email, password);
+      setSubmitting(false);
+      if (error) return setError(error);
+      if (needsEmailConfirm) {
+        setConfirmSent(true);
+      } else {
+        router.push("/dashboard");
+      }
+    }
   }
 
   return (
@@ -51,68 +79,113 @@ export default function LoginPage() {
             <Link href="/" className="inline-flex items-center gap-2 font-display font-semibold text-text mb-2">
               <span className="h-8 w-8 rounded-md bg-accent flex items-center justify-center text-accent-fg font-bold text-sm">PM</span>
             </Link>
-            <h1 className="font-display text-xl font-semibold text-text">Sign in to PlantMind</h1>
+            <h1 className="font-display text-xl font-semibold text-text">
+              {mode === "signin" ? "Sign in to PlantMind" : "Create your PlantMind account"}
+            </h1>
             <p className="text-sm text-text-muted">Unified asset &amp; operations brain</p>
           </div>
 
           <div className="rounded-2xl border border-border bg-surface p-6 space-y-4">
-            <button
-              type="button"
-              disabled
-              title="Google sign-in is not wired up yet — coming soon"
-              className="w-full flex items-center justify-center gap-2 border border-border rounded-lg px-4 py-2.5 text-sm font-medium text-text-muted cursor-not-allowed opacity-60"
-            >
-              <GoogleGlyph />
-              Continue with Google
-              <span className="text-[10px] uppercase tracking-wide text-text-muted ml-1">Soon</span>
-            </button>
+            {confirmSent ? (
+              <div className="text-center space-y-3 py-4">
+                <CheckCircle2 size={28} className="text-accent mx-auto" />
+                <p className="text-sm text-text">Check your inbox to confirm {email}</p>
+                <p className="text-xs text-text-muted">
+                  Once confirmed, come back and sign in below.
+                </p>
+                <button
+                  onClick={() => {
+                    setConfirmSent(false);
+                    setMode("signin");
+                  }}
+                  className="text-sm text-accent hover:underline"
+                >
+                  Back to sign in
+                </button>
+              </div>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled
+                  title="Google sign-in is not wired up yet — coming soon"
+                  className="w-full flex items-center justify-center gap-2 border border-border rounded-lg px-4 py-2.5 text-sm font-medium text-text-muted cursor-not-allowed opacity-60"
+                >
+                  <GoogleGlyph />
+                  Continue with Google
+                  <span className="text-[10px] uppercase tracking-wide text-text-muted ml-1">Soon</span>
+                </button>
 
-            <div className="flex items-center gap-3 text-[10px] uppercase tracking-wide text-text-muted">
-              <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
-            </div>
-
-            <form onSubmit={submit} className="space-y-3">
-              <label className="block">
-                <span className="text-xs text-text-muted mb-1 block">Email</span>
-                <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-accent">
-                  <Mail size={14} className="text-text-muted shrink-0" />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@plant.com"
-                    className="flex-1 bg-transparent text-sm outline-none text-text placeholder:text-text-muted"
-                  />
+                <div className="flex items-center gap-3 text-[10px] uppercase tracking-wide text-text-muted">
+                  <span className="h-px flex-1 bg-border" /> or <span className="h-px flex-1 bg-border" />
                 </div>
-              </label>
-              <label className="block">
-                <span className="text-xs text-text-muted mb-1 block">Password</span>
-                <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-accent">
-                  <Lock size={14} className="text-text-muted shrink-0" />
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="flex-1 bg-transparent text-sm outline-none text-text placeholder:text-text-muted"
-                  />
-                </div>
-              </label>
 
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent-strong text-accent-fg font-medium rounded-lg px-4 py-2.5 text-sm"
-              >
-                <LogIn size={15} />
-                Sign in
-              </button>
-            </form>
+                <form onSubmit={submit} className="space-y-3">
+                  <label className="block">
+                    <span className="text-xs text-text-muted mb-1 block">Email</span>
+                    <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-accent">
+                      <Mail size={14} className="text-text-muted shrink-0" />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@plant.com"
+                        className="flex-1 bg-transparent text-sm outline-none text-text placeholder:text-text-muted"
+                      />
+                    </div>
+                  </label>
+                  <label className="block">
+                    <span className="text-xs text-text-muted mb-1 block">Password</span>
+                    <div className="flex items-center gap-2 border border-border rounded-lg px-3 py-2 focus-within:border-accent">
+                      <Lock size={14} className="text-text-muted shrink-0" />
+                      <input
+                        type="password"
+                        required
+                        minLength={6}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="flex-1 bg-transparent text-sm outline-none text-text placeholder:text-text-muted"
+                      />
+                    </div>
+                  </label>
 
-            <p className="text-[11px] text-text-muted text-center">
-              Demo mode — no account required, any email &amp; password will do.
-            </p>
+                  {error && <p className="text-xs text-danger">{error}</p>}
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full flex items-center justify-center gap-2 bg-accent hover:bg-accent-strong disabled:opacity-60 text-accent-fg font-medium rounded-lg px-4 py-2.5 text-sm"
+                  >
+                    {mode === "signin" ? <LogIn size={15} /> : <UserPlus size={15} />}
+                    {submitting ? "Please wait..." : mode === "signin" ? "Sign in" : "Create account"}
+                  </button>
+                </form>
+
+                <p className="text-[11px] text-text-muted text-center">
+                  {authAvailable ? (
+                    mode === "signin" ? (
+                      <>
+                        Don&apos;t have an account?{" "}
+                        <button onClick={() => setMode("signup")} className="text-accent hover:underline">
+                          Sign up
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        Already have an account?{" "}
+                        <button onClick={() => setMode("signin")} className="text-accent hover:underline">
+                          Sign in
+                        </button>
+                      </>
+                    )
+                  ) : (
+                    "Demo mode — auth isn't configured here, any email & password proceeds through."
+                  )}
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

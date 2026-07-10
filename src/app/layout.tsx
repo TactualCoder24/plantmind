@@ -3,6 +3,7 @@ import { Space_Grotesk, IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { RoleProvider } from "@/lib/roleContext";
 import { ThemeProvider } from "@/lib/themeContext";
+import { AuthProvider } from "@/lib/authContext";
 import Nav from "@/components/Nav";
 
 const spaceGrotesk = Space_Grotesk({
@@ -57,10 +58,12 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col bg-canvas text-text">
         <ThemeProvider>
-          <RoleProvider>
-            <Nav />
-            <main className="flex-1 pb-16 md:pb-0">{children}</main>
-          </RoleProvider>
+          <AuthProvider>
+            <RoleProvider>
+              <Nav />
+              <main className="flex-1 pb-16 md:pb-0">{children}</main>
+            </RoleProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

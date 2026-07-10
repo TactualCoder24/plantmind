@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { readDB } from "@/lib/db";
+import { computeTrends } from "@/lib/predictive";
 
 export async function GET() {
   const db = await readDB();
-  return NextResponse.json({ graph: db.graph });
+  const trends = computeTrends(db);
+  return NextResponse.json({ trends });
 }

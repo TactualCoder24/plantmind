@@ -4,12 +4,13 @@ import { ingestDocument, ingestFile } from "@/lib/ingest";
 import { DocType } from "@/lib/types";
 
 export async function GET() {
-  const db = readDB();
+  const db = await readDB();
   const docs = db.documents.map((d) => ({
     id: d.id,
     title: d.title,
     type: d.type,
     filename: d.filename,
+    content: d.content,
     uploadedAt: d.uploadedAt,
     entities: d.entities,
     fileUrl: d.fileUrl,
@@ -42,22 +43,32 @@ export async function POST(req: Request) {
   }
 
   if (body.base64Data && body.mimeType) {
-    const result = await ingestFile({
-      title,
-      type: type || "equipment_spec",
-      filename: filename || `${title}`,
-      base64Data: body.base64Data,
-      mimeType: body.mimeType,
-    });
-    if (!result.document) {
-      return NextResponse.json({ error: result.error || "Vision ingestion failed" }, { status: 502 });
+    try {
+      const result = await ingestFile({
+        title,
+        type: type || "equipment_spec",
+        filename: filename || `${title}`,
+        base64Data: body.base64Data,
+        mimeType: body.mimeType,
+      });
+      if (!result.document) {
+        return NextResponse.json({ error: result.error || "Vision ingestion failed" }, { status: 502 });
+      }
+      return NextResponse.json({ document: result.document });
+    } catch (e) {
+      return NextResponse.json({ error: e instanceof Error ? e.message : "Ingestion failed" }, { status: 502 });
     }
-    return NextResponse.json({ document: result.document });
   }
 
   if (!body.content) {
     return NextResponse.json({ error: "content (or base64Data+mimeType for scans/images) is required" }, { status: 400 });
   }
-  const doc = await ingestDocument({ title, type: type || "sop", filename: filename || `${title}.txt`, content: body.content });
-  return NextResponse.json({ document: doc });
+  try {
+    const doc = await ingestDocument({ title, type: type || "sop", filename: filename || `${title}.txt`, content: body.content });
+    return NextResponse.json({ document: doc });
+  } catch (e) {
+    // Only reachable when USE_REAL_EMBEDDINGS=true and the Gemini embedding call fails — that
+    // path deliberately doesn't fall back silently (see src/lib/embeddings.ts).
+    return NextResponse.json({ error: e instanceof Error ? e.message : "Ingestion failed" }, { status: 502 });
+  }
 }

@@ -88,11 +88,25 @@ export interface Feedback {
   createdAt: string;
 }
 
+export interface ChatAuditEntry {
+  id: string;
+  question: string;
+  role: string;
+  answer: string;
+  confidence: number;
+  citationTitles: string[];
+  graphFacts: string[];
+  agentic: boolean;
+  toolSteps: string[];
+  createdAt: string;
+}
+
 export interface DB {
   documents: SourceDocument[];
   chunks: Chunk[];
   graph: KnowledgeGraph;
   feedback?: Feedback[];
+  auditLog?: ChatAuditEntry[];
 }
 
 export interface Citation {

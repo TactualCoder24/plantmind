@@ -1,4 +1,7 @@
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 const VEC_DIM = 384;
+const REMOTE_MODEL = "text-embedding-004";
 
 const STOPWORDS = new Set([
   "the", "a", "an", "and", "or", "of", "to", "in", "on", "for", "is", "was",
@@ -51,6 +54,49 @@ export function cosineSim(a: number[], b: number[]): number {
   let dot = 0;
   for (let i = 0; i < a.length; i++) dot += a[i] * b[i];
   return dot;
+}
+
+/**
+ * Whether this deployment should use real Gemini embeddings (`text-embedding-004`) instead of
+ * the local feature-hashed vectors. Deliberately opt-in (env flag), off by default:
+ *
+ * Local hashed vectors and real semantic embeddings are NOT comparable — mixing them within the
+ * same searchable corpus doesn't just risk a dimension mismatch, it silently corrupts retrieval
+ * (cosine similarity between two different vector spaces is meaningless). Since ingestion happens
+ * incrementally per-document, a mid-seed quota failure (this key's free tier is capped at 15
+ * requests/minute, and seeding fires ~18 back-to-back calls already) would leave some chunks
+ * embedded remotely and others locally with no easy way to detect the corruption later. So unlike
+ * every other LLM call path in this app, this one does NOT silently fall back per-call — if
+ * remote mode is on and a call fails, ingestion fails loudly (same philosophy as vision ingestion
+ * having no OCR fallback) rather than quietly mixing embedding schemes.
+ */
+export function useRemoteEmbeddings(): boolean {
+  return process.env.USE_REAL_EMBEDDINGS === "true" && Boolean(process.env.GEMINI_API_KEY);
+}
+
+/**
+ * Embeds multiple texts in one batched Gemini call (one call per document at ingest time,
+ * covering all its chunks, rather than one call per chunk) to keep quota usage bounded. Throws on
+ * any failure — see useRemoteEmbeddings() for why this doesn't fall back silently.
+ */
+export async function embedRemote(texts: string[]): Promise<number[][]> {
+  const key = process.env.GEMINI_API_KEY;
+  if (!key) throw new Error("GEMINI_API_KEY not set");
+  const client = new GoogleGenerativeAI(key);
+  const model = client.getGenerativeModel({ model: REMOTE_MODEL });
+  const result = await model.batchEmbedContents({
+    requests: texts.map((text) => ({ content: { role: "user", parts: [{ text }] } })),
+  });
+  return result.embeddings.map((e) => e.values);
+}
+
+/** Embeds a single query string with whichever scheme the stored corpus was embedded with. */
+export async function embedQuery(text: string): Promise<number[]> {
+  if (useRemoteEmbeddings()) {
+    const [vec] = await embedRemote([text]);
+    return vec;
+  }
+  return embed(text);
 }
 
 export function chunkText(text: string, maxLen = 700): string[] {

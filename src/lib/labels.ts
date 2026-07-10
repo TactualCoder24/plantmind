@@ -7,6 +7,9 @@ export const RCA_TOOL_LABELS: Record<string, string> = {
   get_colocated_equipment: "Looking for nearby connected equipment",
   get_compliance_status: "Checking regulatory compliance status",
   search_documents: "Searching related documents",
+  check_trend: "Checking if readings are trending toward alarm",
+  propose_work_order: "Drafting a work order proposal",
+  propose_compliance_followup: "Drafting a compliance follow-up flag",
 };
 
 export function friendlyToolLabel(toolName: string): string {

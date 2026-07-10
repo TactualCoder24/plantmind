@@ -229,6 +229,38 @@ issue I can't fix from here. Checklist:
    codebase (`[llmExtractEntities] falling back...`, `[chatAgent] Gemini agent loop failed...`,
    etc.) are designed to make the real cause visible there.
 
+## Done — made both agents more agentic (write-capable, human-confirmed) + Features tab (this session)
+
+- [x] **Agents can now act, not just retrieve — with a human confirming every action.** Asked "can
+      it be made more agentic," and the honest answer was: the existing agents could only read
+      (search docs, check history, check compliance), never act, and that's usually what "agentic"
+      really means. Added two new tools to the shared tool set both `/chat` and `/rca` already use
+      (`src/lib/rcaTools.ts`):
+      - `propose_work_order` — drafts a work order for a specific corrective action
+      - `propose_compliance_followup` — flags a specific regulation for follow-up review
+      Neither one writes anything. Each returns a structured proposal that the UI renders as a
+      confirm-before-acting card (`src/components/ProposalCard.tsx`) — only an explicit user click
+      calls `POST /api/actions/work-order` or `POST /api/actions/compliance-followup`, which are
+      the only code paths that actually persist anything. This is a deliberate line: letting an
+      LLM autonomously decide which documents to read is safe to let run freely (already shipped);
+      letting it autonomously file real work orders on an industrial plant with no human in the
+      loop is a materially riskier claim, so that one requires confirmation. Verified live: asked
+      the RCA agent to investigate C-301, and — entirely on its own, not told to — it chose a
+      6-step investigation ending in both a drafted work order ("perform vibration analysis and
+      shaft alignment check... investigate the mechanical coupling with CT-02") and a drafted
+      compliance follow-up, both rendered as confirm cards; clicking through actually created a
+      real work order document (now searchable, graphed, and citable like any other) and a real
+      compliance follow-up entry.
+- [x] **Also added `check_trend`** to the same tool set, wiring the predictive-trend signal
+      (`src/lib/predictive.ts`, previously only a dashboard card) into what the agents can check
+      for themselves — used naturally as step 3 of the C-301 investigation above.
+- [x] **Compliance follow-ups are now visible** — `/compliance` shows a "Flagged for follow-up"
+      section (`db.complianceFollowups`) above the regular findings, distinguishing agent-raised
+      flags from user-raised ones.
+- [x] **`/features` page** — a full tour of everything built, grouped honestly (agentic vs.
+      rule-based vs. plain CRUD, matching the "Is this agentic, honestly?" section above rather
+      than contradicting it), linked from the main nav and the landing page.
+
 ## Not started / stretch (incl. new feature ideas)
 
 Everything not yet built, in one list. What's left after this session is either genuinely
@@ -329,3 +361,15 @@ out of scope for an app with this data model, or needs an input I don't have acc
   set for Production specifically, redeploy required after adding/changing env vars) in both
   `README.md` and `TODO.md`. Also added a "View document" option — document cards on `/documents`
   now open a full-content modal, and chat citations deep-link into it. Full rebuild clean.
+- User asked "can it be made more agentic?" The honest gap: both existing agents could only read,
+  never act — added `propose_work_order` and `propose_compliance_followup` tools (plus
+  `check_trend`, wiring the predictive signal into the tool set) to the shared tool set both
+  `/chat` and `/rca` use, with a hard rule that proposing is as far as the agent itself goes —
+  actually creating anything requires an explicit user click through a confirm card, hitting a
+  separate API route the agent has no access to. Verified live: asked the RCA agent to investigate
+  C-301 with zero extra instruction, and it autonomously ran a 6-step investigation — history,
+  co-located equipment, trend check, compliance status, then drafted both a work order and a
+  compliance follow-up unprompted — and confirming both through the UI created a real searchable
+  work order document and a real compliance follow-up entry. Also added `/features`, a full,
+  honestly-categorized tour of the app (agentic vs. rule-based vs. plain CRUD), linked from the
+  nav and landing page. Full rebuild clean, all 25 routes present.

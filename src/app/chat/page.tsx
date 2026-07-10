@@ -6,6 +6,7 @@ import { Send, FileText, Network, Loader2, ThumbsUp, ThumbsDown, Check, Bot } fr
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { Citation } from "@/lib/types";
 import { confidenceLabel, formatGraphFact, friendlyToolLabel } from "@/lib/labels";
+import { ProposalCard } from "@/components/ProposalCard";
 
 interface Message {
   id: string;
@@ -17,7 +18,7 @@ interface Message {
   confidence?: number;
   rated?: "up" | "down";
   agentic?: boolean;
-  steps?: { step: number; tool: string }[];
+  steps?: { step: number; tool: string; result?: unknown }[];
 }
 
 const SUGGESTED = [
@@ -124,10 +125,15 @@ export default function ChatPage() {
               {m.text}
 
               {m.role === "assistant" && m.agentic && m.steps && m.steps.length > 0 && (
-                <div className="mt-2 flex items-center gap-1.5 text-[10px] text-accent bg-accent/10 border border-accent/30 rounded-md px-2 py-1 w-fit">
-                  <Bot size={11} />
-                  Worked it out in {m.steps.length} step{m.steps.length === 1 ? "" : "s"}:{" "}
-                  {m.steps.map((s) => friendlyToolLabel(s.tool)).join(" → ")}
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-[10px] text-accent bg-accent/10 border border-accent/30 rounded-md px-2 py-1 w-fit">
+                    <Bot size={11} />
+                    Worked it out in {m.steps.length} step{m.steps.length === 1 ? "" : "s"}:{" "}
+                    {m.steps.map((s) => friendlyToolLabel(s.tool)).join(" → ")}
+                  </div>
+                  {m.steps.map((s, i) => (
+                    <ProposalCard key={i} result={s.result} />
+                  ))}
                 </div>
               )}
 

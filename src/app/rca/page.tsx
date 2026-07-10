@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Wrench, Loader2, Bot, ListTree, ChevronDown } from "lucide-react";
 import { GraphNode } from "@/lib/types";
 import { friendlyToolLabel } from "@/lib/labels";
+import { ProposalCard } from "@/components/ProposalCard";
 
 interface RcaStep {
   step: number;
   tool: string;
   args: Record<string, unknown>;
   resultPreview: string;
+  result: unknown;
 }
 
 interface RcaResult {
@@ -125,6 +127,9 @@ export default function RcaPage() {
                         <div className="text-text-muted text-xs">{s.resultPreview}</div>
                       </div>
                     )}
+                    <div className="pl-5">
+                      <ProposalCard result={s.result} />
+                    </div>
                   </div>
                 ))}
               </div>

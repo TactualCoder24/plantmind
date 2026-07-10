@@ -9,7 +9,7 @@ const STATE_BUCKET = "plantmind-state";
 const STATE_KEY = "db.json";
 
 function emptyDB(): DB {
-  return { documents: [], chunks: [], graph: { nodes: [], edges: [] }, feedback: [], auditLog: [] };
+  return { documents: [], chunks: [], graph: { nodes: [], edges: [] }, feedback: [], auditLog: [], complianceFollowups: [] };
 }
 
 function getClient(): SupabaseClient | null {

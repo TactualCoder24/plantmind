@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { MessageSquare, FileText, Network, ShieldCheck, LayoutDashboard, Wrench, Sun, Moon, LogIn, LogOut, ListChecks } from "lucide-react";
+import { MessageSquare, FileText, Network, ShieldCheck, LayoutDashboard, Wrench, Sun, Moon, LogIn, LogOut, ListChecks, Sparkles } from "lucide-react";
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { useTheme } from "@/lib/themeContext";
 import { useAuth } from "@/lib/authContext";
@@ -16,6 +16,7 @@ const ITEMS = [
   { href: "/graph", label: "Connections", icon: Network },
   { href: "/compliance", label: "Compliance", icon: ShieldCheck },
   { href: "/audit", label: "Audit Log", icon: ListChecks },
+  { href: "/features", label: "Features", icon: Sparkles },
 ];
 
 // The marketing landing page and the auth form render their own minimal headers.

@@ -10,6 +10,7 @@ export interface ChatAgentStep {
   step: number;
   tool: string;
   args: Record<string, unknown>;
+  result: unknown;
 }
 
 export interface ChatAgentResult {
@@ -97,11 +98,17 @@ export async function runChatAgent(db: DB, question: string, role: string): Prom
     let result = await chat.sendMessage(
       `You are an industrial knowledge copilot for a plant. ${roleGuidance[role] || ""} ` +
         `Use the available tools to find whatever information you need to answer the question — search ` +
-        `documents, check an equipment's history, check what other equipment shares documents with it, or ` +
-        `check its compliance status, in whatever combination is relevant. You decide which tools to call, ` +
-        `in what order, and when you have enough evidence to stop. When you're done, respond with a final ` +
-        `plain-text answer that cites the specific document titles you drew on. If the tools don't turn up ` +
-        `enough to answer confidently, say so explicitly. Do not call more than ${MAX_STEPS} tools total.\n\n` +
+        `documents, check an equipment's history, check what other equipment shares documents with it, ` +
+        `check its compliance status, or check whether its readings are trending toward an alarm ` +
+        `threshold, in whatever combination is relevant. You decide which tools to call, in what order, ` +
+        `and when you have enough evidence to stop. If — and only if — the question calls for a concrete ` +
+        `corrective action and the evidence clearly supports one, you may propose a work order ` +
+        `(propose_work_order) or flag a compliance follow-up (propose_compliance_followup); these only ` +
+        `draft a proposal for the user to confirm, they don't create anything themselves. Don't force it ` +
+        `for questions that are just asking for information. When you're done, respond with a final ` +
+        `plain-text answer that cites the specific document titles you drew on, and mentions explicitly ` +
+        `if you drafted a proposal. If the tools don't turn up enough to answer confidently, say so ` +
+        `explicitly. Do not call more than ${MAX_STEPS} tools total.\n\n` +
         `Question: ${question}`
     );
 
@@ -113,7 +120,7 @@ export async function runChatAgent(db: DB, question: string, role: string): Prom
       for (const call of calls) {
         const args = (call.args as Record<string, unknown>) || {};
         const toolResult = await runRcaTool(db, call.name, args);
-        steps.push({ step: steps.length + 1, tool: call.name, args });
+        steps.push({ step: steps.length + 1, tool: call.name, args, result: toolResult });
         if (typeof args.equipmentTag === "string" && args.equipmentTag) usedEquipmentTags.add(args.equipmentTag);
         collectDocTitles(toolResult, usedDocTitles);
         responses.push({ functionResponse: { name: call.name, response: { result: toolResult } } });

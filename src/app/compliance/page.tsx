@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, ShieldAlert, ShieldQuestion, Loader2, FileText, Download } from "lucide-react";
+import { ShieldCheck, ShieldAlert, ShieldQuestion, Loader2, FileText, Download, Bot } from "lucide-react";
 import { friendlyStatusLabel } from "@/lib/labels";
 
 interface Finding {
@@ -12,6 +12,15 @@ interface Finding {
   relatedEquipment: string[];
   relatedDocuments: { id: string; title: string; type: string }[];
   recommendation: string;
+}
+
+interface Followup {
+  id: string;
+  regulationCode: string;
+  regulationTitle: string;
+  note: string;
+  raisedBy: "agent" | "user";
+  createdAt: string;
 }
 
 function csvEscape(value: string): string {
@@ -45,11 +54,15 @@ const STATUS_STYLE: Record<Finding["status"], { icon: typeof ShieldCheck; card: 
 
 export default function CompliancePage() {
   const [findings, setFindings] = useState<Finding[] | null>(null);
+  const [followups, setFollowups] = useState<Followup[]>([]);
 
   useEffect(() => {
     fetch("/api/compliance")
       .then((r) => r.json())
       .then((d) => setFindings(d.findings));
+    fetch("/api/actions/compliance-followup")
+      .then((r) => r.json())
+      .then((d) => setFollowups(d.followups || []));
   }, []);
 
   const gapCount = findings?.filter((f) => f.status === "gap").length ?? 0;
@@ -86,6 +99,28 @@ export default function CompliancePage() {
             <div className="text-2xl font-display font-semibold text-danger">{gapCount}</div>
             <div className="text-xs text-text-muted">Need attention</div>
           </div>
+        </div>
+      )}
+
+      {followups.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs uppercase tracking-wide text-text-muted">Flagged for follow-up</div>
+          {followups.map((f) => (
+            <div key={f.id} className="rounded-xl border border-warning/40 bg-warning/5 p-3 flex items-start gap-2">
+              {f.raisedBy === "agent" ? (
+                <Bot size={14} className="text-warning shrink-0 mt-0.5" />
+              ) : (
+                <ShieldQuestion size={14} className="text-warning shrink-0 mt-0.5" />
+              )}
+              <div>
+                <div className="text-sm text-text font-medium">{f.regulationTitle}</div>
+                <div className="text-xs text-text-secondary mt-0.5">{f.note}</div>
+                <div className="text-[10px] text-text-muted mt-1">
+                  {f.raisedBy === "agent" ? "Flagged by the copilot" : "Flagged by a user"} · {new Date(f.createdAt).toLocaleDateString()}
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

@@ -197,6 +197,9 @@ export default function LandingPage() {
             </Link>
           ))}
         </div>
+        <Link href="/features" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mt-4">
+          See the full feature list <ArrowRight size={14} />
+        </Link>
       </section>
 
       <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-2 justify-between">

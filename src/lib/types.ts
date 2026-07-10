@@ -101,12 +101,22 @@ export interface ChatAuditEntry {
   createdAt: string;
 }
 
+export interface ComplianceFollowup {
+  id: string;
+  regulationCode: string;
+  regulationTitle: string;
+  note: string;
+  raisedBy: "agent" | "user";
+  createdAt: string;
+}
+
 export interface DB {
   documents: SourceDocument[];
   chunks: Chunk[];
   graph: KnowledgeGraph;
   feedback?: Feedback[];
   auditLog?: ChatAuditEntry[];
+  complianceFollowups?: ComplianceFollowup[];
 }
 
 export interface Citation {

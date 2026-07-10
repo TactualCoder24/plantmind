@@ -10,6 +10,7 @@ export interface RcaStep {
   tool: string;
   args: Record<string, unknown>;
   resultPreview: string;
+  result: unknown;
 }
 
 export interface RcaResult {
@@ -63,11 +64,17 @@ export async function runRcaAgent(db: DB, equipmentTag: string): Promise<RcaResu
       `You are a reliability engineering RCA (root cause analysis) agent for an industrial plant. ` +
         `Investigate repeat or notable failures for equipment tag "${equipmentTag}". ` +
         `Use the available tools to gather its work order/incident history, check for co-located ` +
-        `equipment that might be a structural/shared-asset root cause, and check its regulatory ` +
-        `compliance status. Call tools as many times as you need — you decide the order and when ` +
-        `you have enough evidence. When you're done, respond with a final plain-text RCA report ` +
-        `(no more function calls) covering: failure pattern, root cause, evidence, and recommended ` +
-        `corrective actions. Do not call more than ${MAX_STEPS} tools total.`
+        `equipment that might be a structural/shared-asset root cause, check whether its readings ` +
+        `are trending toward an alarm threshold (not just its current state), and check its ` +
+        `regulatory compliance status. Call tools as many times as you need — you decide the order ` +
+        `and when you have enough evidence. If the evidence clearly points to a specific corrective ` +
+        `action, propose a work order for it (propose_work_order) — this only drafts a proposal for ` +
+        `the user to confirm, it does not create anything itself, so don't hesitate to use it when ` +
+        `warranted. Same for propose_compliance_followup if you find a specific compliance gap worth ` +
+        `flagging. When you're done, respond with a final plain-text RCA report (no more function ` +
+        `calls) covering: failure pattern, root cause, evidence, and recommended corrective actions ` +
+        `— mention explicitly if you drafted a work order or compliance flag proposal. Do not call ` +
+        `more than ${MAX_STEPS} tools total.`
     );
 
     for (let i = 0; i < MAX_STEPS; i++) {
@@ -82,6 +89,7 @@ export async function runRcaAgent(db: DB, equipmentTag: string): Promise<RcaResu
           tool: call.name,
           args: (call.args as Record<string, unknown>) || {},
           resultPreview: JSON.stringify(toolResult).slice(0, 300),
+          result: toolResult,
         });
         responses.push({
           functionResponse: { name: call.name, response: { result: toolResult } },

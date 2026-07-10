@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, Sun, Moon, Mail, Lock, LogIn, UserPlus, CheckCircle2 } from "lucide-react";
 import { useTheme } from "@/lib/themeContext";
 import { useAuth } from "@/lib/authContext";
+import { Logo } from "@/components/Logo";
 
 // Google-icon glyph as inline SVG so we don't need an external asset for the (currently disabled) button.
 function GoogleGlyph() {
@@ -77,7 +78,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center space-y-1.5">
             <Link href="/" className="inline-flex items-center gap-2 font-display font-semibold text-text mb-2">
-              <span className="h-8 w-8 rounded-md bg-accent flex items-center justify-center text-accent-fg font-bold text-sm">PM</span>
+              <Logo size={32} />
             </Link>
             <h1 className="font-display text-xl font-semibold text-text">
               {mode === "signin" ? "Sign in to PlantMind" : "Create your PlantMind account"}

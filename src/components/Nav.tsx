@@ -6,6 +6,7 @@ import { MessageSquare, FileText, Network, ShieldCheck, LayoutDashboard, Wrench,
 import { useRole, ROLE_LABELS } from "@/lib/roleContext";
 import { useTheme } from "@/lib/themeContext";
 import { useAuth } from "@/lib/authContext";
+import { Logo } from "@/components/Logo";
 import { Role } from "@/lib/types";
 
 const ITEMS = [
@@ -42,7 +43,7 @@ export default function Nav() {
       <header className="hidden md:flex items-center justify-between border-b border-border bg-canvas/80 backdrop-blur px-6 py-3 sticky top-0 z-30">
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text shrink-0">
-            <span className="h-7 w-7 rounded-md bg-accent flex items-center justify-center text-accent-fg font-bold text-sm">PM</span>
+            <Logo size={28} />
             PlantMind
           </Link>
           <nav className="flex items-center gap-1">
@@ -105,7 +106,7 @@ export default function Nav() {
       {/* Mobile top bar */}
       <header className="md:hidden flex items-center justify-between border-b border-border bg-canvas px-4 py-3 sticky top-0 z-30 gap-2">
         <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text shrink-0">
-          <span className="h-6 w-6 rounded-md bg-accent flex items-center justify-center text-accent-fg font-bold text-xs">PM</span>
+          <Logo size={24} />
           PlantMind
         </Link>
         <div className="flex items-center gap-1.5">

@@ -435,3 +435,12 @@ out of scope for an app with this data model, or needs an input I don't have acc
   selector while testing (matched a description paragraph in addition to the real button) — a
   testing artifact, not a product bug, but worth noting since it briefly looked like the button
   wasn't working. Full rebuild clean, all 27 routes present.
+- User supplied a real logo (`src/logo.png`) and asked for the landing page to be less sparse.
+  Added a `Logo` component (`src/components/Logo.tsx`, `next/image` over the static import) and
+  replaced the "PM" text badge with it across `Nav.tsx` (desktop + mobile) and `/login`. Expanded
+  the landing page from 3 sections (hero, roles, a 4-item feature grid) to 6: added a "How it
+  works" 3-step section, a "Real agentic AI, labeled honestly" section highlighting the 3 agentic
+  tool-users plus the autonomous sweep, doubled the feature grid to 8 items, and added a compact
+  platform-trust strip (Auth, persistent storage, audit trail, feedback loop). `/features` (added
+  last session) already covers the exhaustive version; the landing page now previews enough of it
+  to not feel thin without duplicating it wholesale.

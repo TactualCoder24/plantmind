@@ -14,10 +14,19 @@ import {
   Sun,
   Moon,
   LogIn,
+  Upload,
+  Sparkles,
+  ClipboardPlus,
+  TrendingUp,
+  ListChecks,
+  KeyRound,
+  Cloud,
+  ThumbsUp,
 } from "lucide-react";
 import { useRole } from "@/lib/roleContext";
 import { useTheme } from "@/lib/themeContext";
 import { useAuth } from "@/lib/authContext";
+import { Logo } from "@/components/Logo";
 import { Role } from "@/lib/types";
 
 const ROLES: { role: Role; title: string; icon: typeof HardHat; blurb: string; asks: string }[] = [
@@ -44,11 +53,47 @@ const ROLES: { role: Role; title: string; icon: typeof HardHat; blurb: string; a
   },
 ];
 
+const HOW_IT_WORKS = [
+  {
+    icon: Upload,
+    title: "Add what you already have",
+    desc: "Paste text, or upload a photo, PDF, or spreadsheet — specs, work orders, SOPs, inspection reports, regulations. Read automatically, no manual tagging.",
+  },
+  {
+    icon: Sparkles,
+    title: "Ask, investigate, or check compliance",
+    desc: "Three agents — copilot, root-cause, and compliance — decide for themselves which documents and records to check before answering.",
+  },
+  {
+    icon: ClipboardPlus,
+    title: "Confirm the action, or don't",
+    desc: "If an agent finds something actionable, it drafts a work order or a compliance flag — but only your click actually creates it.",
+  },
+];
+
+const AGENTIC_POINTS = [
+  { icon: MessageSquare, title: "Agentic Copilot", desc: "Decides which documents, history, or compliance records to check before answering." },
+  { icon: Bot, title: "Agentic Root Cause", desc: "Chains equipment history, trend data, and compliance status into one cited report." },
+  { icon: ShieldCheck, title: "Agentic Compliance", desc: "Reads the actual regulation text and reasons about it — not just keyword matching." },
+  { icon: TrendingUp, title: "Autonomous sweep", desc: "Finds every asset trending toward alarm and investigates all of them automatically." },
+];
+
 const FEATURES = [
   { href: "/chat", icon: MessageSquare, title: "Ask a Question", desc: "Plain-language answers with the source attached, every time." },
   { href: "/rca", icon: Bot, title: "Find the Root Cause", desc: "Automatically investigates why something failed, step by step." },
+  { href: "/compliance", icon: ShieldCheck, title: "Check Compliance", desc: "Rule-based scan plus an AI agent that reads and reasons about each regulation." },
   { href: "/graph", icon: Network, title: "See the Connections", desc: "Equipment, procedures, people and incidents — linked, not just filed away." },
   { href: "/documents", icon: FileText, title: "Add Any Document", desc: "Paste text, or upload a photo, PDF, or spreadsheet — it's read automatically." },
+  { href: "/dashboard", icon: TrendingUp, title: "Catch Trends Early", desc: "Flags equipment trending toward alarm, even after a fix brought it back down." },
+  { href: "/audit", icon: ListChecks, title: "Audit Every Answer", desc: "Every copilot answer logged with exactly what it checked and cited." },
+  { href: "/features", icon: Sparkles, title: "Everything Else", desc: "Feedback loop, CSV export, role-aware views, and more." },
+];
+
+const PLATFORM_POINTS = [
+  { icon: KeyRound, label: "Real Supabase Auth" },
+  { icon: Cloud, label: "Persistent, serverless-safe storage" },
+  { icon: ListChecks, label: "Full audit trail" },
+  { icon: ThumbsUp, label: "Feedback loop on every answer" },
 ];
 
 export default function LandingPage() {
@@ -67,10 +112,13 @@ export default function LandingPage() {
       {/* Minimal marketing header */}
       <header className="flex items-center justify-between px-4 md:px-8 py-4 max-w-6xl mx-auto">
         <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text">
-          <span className="h-7 w-7 rounded-md bg-accent flex items-center justify-center text-accent-fg font-bold text-sm">PM</span>
+          <Logo size={28} />
           PlantMind
         </Link>
         <div className="flex items-center gap-2">
+          <Link href="/features" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary hover:text-text px-3 py-1.5">
+            Features
+          </Link>
           <button
             onClick={toggleTheme}
             aria-label="Toggle light / dark theme"
@@ -152,6 +200,54 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* How it works */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-14 md:py-20 border-t border-border">
+        <div className="max-w-2xl mb-8 md:mb-10">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">How it works</h2>
+          <p className="text-text-muted mt-2 text-sm md:text-base">Three steps, and a human confirms anything that actually changes something.</p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4">
+          {HOW_IT_WORKS.map((s, i) => (
+            <div key={s.title} className="rounded-2xl border border-border bg-surface p-6 space-y-3">
+              <div className="flex items-center gap-3">
+                <span className="h-8 w-8 rounded-full bg-accent text-accent-fg font-display font-semibold text-sm flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                <s.icon size={20} className="text-accent" />
+              </div>
+              <div className="font-display font-semibold text-text">{s.title}</div>
+              <p className="text-sm text-text-muted">{s.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Agentic AI, honestly */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-14 md:py-20 border-t border-border">
+        <div className="max-w-2xl mb-8 md:mb-10">
+          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">Real agentic AI, labeled honestly</h2>
+          <p className="text-text-muted mt-2 text-sm md:text-base max-w-2xl">
+            Three agents decide for themselves which tools to use — not a fixed script. Every one
+            of them can propose a work order or a compliance flag, but none of them can create one
+            without you clicking confirm.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {AGENTIC_POINTS.map((p) => (
+            <div key={p.title} className="rounded-xl border border-border bg-surface p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <p.icon size={18} className="text-accent" />
+                <span className="text-[10px] uppercase tracking-wide text-accent bg-accent/10 border border-accent/30 rounded-full px-2 py-0.5">
+                  Agentic
+                </span>
+              </div>
+              <div className="text-sm font-medium text-text">{p.title}</div>
+              <div className="text-xs text-text-muted">{p.desc}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Role selection */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-14 md:py-20 border-t border-border">
         <div className="max-w-2xl mb-8 md:mb-10">
@@ -186,7 +282,7 @@ export default function LandingPage() {
       {/* Feature grid */}
       <section className="max-w-6xl mx-auto px-4 md:px-8 py-14 md:py-20 border-t border-border">
         <div className="max-w-2xl mb-8 md:mb-10">
-          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">Everything in one place, four ways to use it</h2>
+          <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">Everything in one place</h2>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {FEATURES.map((f) => (
@@ -200,6 +296,18 @@ export default function LandingPage() {
         <Link href="/features" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mt-4">
           See the full feature list <ArrowRight size={14} />
         </Link>
+      </section>
+
+      {/* Platform trust strip */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-10 border-t border-border">
+        <div className="flex flex-wrap items-center gap-x-8 gap-y-3 justify-center text-text-muted">
+          {PLATFORM_POINTS.map((p) => (
+            <div key={p.label} className="flex items-center gap-2 text-sm">
+              <p.icon size={15} className="text-accent" />
+              {p.label}
+            </div>
+          ))}
+        </div>
       </section>
 
       <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-2 justify-between">

@@ -116,6 +116,9 @@ export default function LandingPage() {
           Innfetch
         </Link>
         <div className="flex items-center gap-2">
+          <Link href="/about" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary hover:text-text px-3 py-1.5">
+            About
+          </Link>
           <Link href="/features" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary hover:text-text px-3 py-1.5">
             Features
           </Link>
@@ -196,6 +199,31 @@ export default function LandingPage() {
             <MiniStat label="Document types" value="8" />
             <MiniStat label="Auto-connected" value="Yes" />
             <MiniStat label="Setup needed" value="None" />
+          </div>
+        </div>
+      </section>
+
+      {/* About, in plain language */}
+      <section className="max-w-6xl mx-auto px-4 md:px-8 py-14 md:py-20 border-t border-border">
+        <div className="grid md:grid-cols-[0.9fr_1.1fr] gap-8 md:gap-12 items-start">
+          <div>
+            <h2 className="font-display text-2xl md:text-3xl font-semibold tracking-tight">What is Innfetch, really?</h2>
+            <Link href="/about" className="inline-flex items-center gap-1.5 text-sm text-accent hover:underline mt-3">
+              Read the full story <ArrowRight size={14} />
+            </Link>
+          </div>
+          <div className="space-y-3 text-text-secondary text-sm md:text-base leading-relaxed">
+            <p>
+              In plain terms: every plant already has the answers written down somewhere —
+              manuals, work orders, inspection reports, SOPs, regulations. The problem isn&apos;t
+              that the information doesn&apos;t exist. It&apos;s that finding it takes 30-45
+              minutes of digging through folders in the middle of a shift.
+            </p>
+            <p>
+              Innfetch reads all of that once, then lets anyone ask a question in plain English and
+              get an answer in seconds — always showing exactly which document it came from, so
+              you can check it yourself instead of just trusting it.
+            </p>
           </div>
         </div>
       </section>
@@ -310,9 +338,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-2 justify-between">
+      <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
         <span>Innfetch — built for heavy industry.</span>
-        <span>No account required to explore — sign in only if you want to save your own session.</span>
+        <div className="flex items-center gap-4">
+          <Link href="/about" className="hover:text-text-secondary">About</Link>
+          <Link href="/features" className="hover:text-text-secondary">Features</Link>
+          <span>No account required to explore — sign in only if you want to save your own session.</span>
+        </div>
       </footer>
     </div>
   );

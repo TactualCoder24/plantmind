@@ -343,6 +343,29 @@ issue I can't fix from here. Checklist:
       the document viewer modal, proposal cards — already reflows correctly at 375px; the chat
       header issue above was the only genuine bug found.
 
+## Done — About page + real logo fix (this session)
+
+- [x] **New `/about` page** — a plain-language explanation of what Innfetch is, who it's for, how
+      it actually works (3-step flow), what "agentic AI" means in this app without jargon, and why
+      the answers can be trusted. Links out to `/features` for the honest agentic-vs-rule-based
+      breakdown rather than duplicating it.
+- [x] **New "About, in plain language" section on the landing page**, placed right after the Hero,
+      with a link through to the full `/about` page. Nav and footer on the landing page now both
+      link to `/about` and `/features`.
+- [x] **Fixed the icon the user flagged in a screenshot as a broken/warning triangle.** It wasn't
+      actually broken — `src/app/favicon.ico` was still the stock default Next.js icon (verified via
+      `file src/app/favicon.ico` → literally the default Next.js triangle), never replaced when the
+      real logo was added earlier. Fixed using the Next.js App Router icon convention
+      (`src/app/icon.png`, auto-generates the `<link rel="icon">` tag) instead of the old
+      `favicon.ico`, and removed the stale file.
+- [x] **Replaced the placeholder logo with the real one.** The user supplied `src/mainlogo.jpg` — a
+      full wordmark (globe icon + "INNFETCH" + tagline) — calling it out as "the main logo." Cropped
+      a transparent, text-free square icon from it (`src/logo-icon.png`, via `sharp`) for compact
+      use in the `Logo` component (nav, mobile header, login, favicon), and used the full wordmark
+      directly on the `/about` page hero where there's room for it. Verified both via Playwright
+      screenshots: compact globe renders cleanly at 24-32px in the nav, full wordmark renders
+      cleanly at the About page hero size, and the favicon `<link>` now resolves to `/icon.png`.
+
 ## Not started / stretch (incl. new feature ideas)
 
 Everything not yet built, in one list. What's left after this session is either genuinely
@@ -492,3 +515,18 @@ out of scope for an app with this data model, or needs an input I don't have acc
   borders were nearly invisible against a near-white surface), added a visible keyboard-focus
   outline globally, and gave the mobile bottom nav's active tab a background pill plus a
   scroll-hint fade now that it holds 8 items. Full rebuild clean.
+- User flagged a screenshot showing what looked like a broken/warning-triangle icon next to the
+  brand name, and asked for an `/about` page plus a plain-language About section on the landing
+  page, using "the main logo." Investigated the screenshot first rather than assuming: it was the
+  stock default Next.js favicon (`src/app/favicon.ico`), never replaced when the real logo was
+  added — confirmed via `file favicon.ico`. Fixed with the App Router's `icon.png` convention.
+  The user had also dropped a new file, `src/mainlogo.jpg` — a fuller wordmark (globe + "INNFETCH"
+  + tagline) than the icon-only `logo.png` used so far — and called it out as "the main logo," so
+  used it in place of the old one: cropped a transparent, text-free icon from it with `sharp` for
+  compact nav/favicon use, and used the full wordmark directly on the new `/about` page's hero.
+  Built `/about` (problem it solves, who it's for, a 3-step how-it-works, an honest no-jargon
+  explanation of what "agentic" does and doesn't mean here, and a trust section), added a matching
+  About section to the landing page right after the Hero, and linked both from nav/footer/`/features`.
+  Verified visually via Playwright screenshots (not just a clean build) — the about page, its
+  mobile layout, the landing section, and the new compact/full logo both rendering correctly, and
+  confirmed the `<link rel="icon">` now resolves to `/icon.png`. Full rebuild clean, 28 routes.

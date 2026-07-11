@@ -126,7 +126,8 @@ export default function FeaturesPage() {
         </h1>
         <p className="text-sm text-text-muted max-w-2xl">
           A full tour of what's built — what's genuinely agentic, what's rule-based, and what's
-          plain CRUD, labeled honestly rather than calling everything "AI."
+          plain CRUD, labeled honestly rather than calling everything "AI." New here? See{" "}
+          <Link href="/about" className="text-accent hover:underline">what Innfetch is, in plain language</Link> first.
         </p>
       </div>
 

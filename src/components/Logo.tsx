@@ -1,5 +1,5 @@
 import Image from "next/image";
-import logoImg from "@/logo.png";
+import logoImg from "@/logo-icon.png";
 
 export function Logo({ size = 28 }: { size?: number }) {
   return (

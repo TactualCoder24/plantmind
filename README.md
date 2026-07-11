@@ -1,4 +1,4 @@
-# PlantMind — Unified Asset & Operations Brain
+# Innfetch — Unified Asset & Operations Brain
 
 AI for industrial knowledge intelligence. Ingests heterogeneous plant documents (equipment specs,
 work orders, SOPs, inspection reports, incident reports, regulatory excerpts, emails), links them
@@ -11,7 +11,7 @@ Built for ET AI Hackathon 2026 — Problem Statement 8.
 
 Flat document search (or plain RAG) returns keyword matches. It cannot answer relationship
 questions like *"what deferred maintenance is implicated in this failure?"* because the answer
-spans multiple documents and none of them alone contains it. PlantMind pairs a **knowledge graph**
+spans multiple documents and none of them alone contains it. Innfetch pairs a **knowledge graph**
 (equipment ↔ procedures ↔ personnel ↔ regulations ↔ incidents) with **RAG over chunked, embedded
 documents**, so the copilot can synthesize both keyword-relevant text *and* graph-traced
 relationships into one cited answer.

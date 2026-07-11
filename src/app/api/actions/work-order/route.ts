@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const content = `Work Order ID: AI-DRAFT-${Date.now()}
 Equipment Tag: ${body.equipmentTag}
 Raised Date: ${today}
-Raised By: PlantMind Copilot (AI-drafted, confirmed by user)
+Raised By: Innfetch Copilot (AI-drafted, confirmed by user)
 Priority: ${priority}
 Status: Open
 

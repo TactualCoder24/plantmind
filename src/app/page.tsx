@@ -113,7 +113,7 @@ export default function LandingPage() {
       <header className="flex items-center justify-between px-4 md:px-8 py-4 max-w-6xl mx-auto">
         <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text">
           <Logo size={28} />
-          PlantMind
+          Innfetch
         </Link>
         <div className="flex items-center gap-2">
           <Link href="/features" className="hidden sm:flex items-center gap-1.5 text-sm text-text-secondary hover:text-text px-3 py-1.5">
@@ -156,7 +156,7 @@ export default function LandingPage() {
             <span className="text-accent"> One answer, with citations.</span>
           </h1>
           <p className="text-text-muted text-base md:text-lg max-w-xl">
-            PlantMind brings your equipment specs, work orders, procedures, inspection reports and
+            Innfetch brings your equipment specs, work orders, procedures, inspection reports and
             regulations into one place — so anyone on the floor can ask a plain-language question
             and get a trustworthy answer, with its source, in seconds instead of a 40-minute paper
             chase.
@@ -311,7 +311,7 @@ export default function LandingPage() {
       </section>
 
       <footer className="max-w-6xl mx-auto px-4 md:px-8 py-8 border-t border-border text-xs text-text-muted flex flex-col sm:flex-row gap-2 justify-between">
-        <span>PlantMind — built for heavy industry.</span>
+        <span>Innfetch — built for heavy industry.</span>
         <span>No account required to explore — sign in only if you want to save your own session.</span>
       </footer>
     </div>

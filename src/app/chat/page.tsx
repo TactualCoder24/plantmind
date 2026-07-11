@@ -37,7 +37,11 @@ export default function ChatPage() {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Skip on initial mount (no messages yet) — scrolling into view here has nothing useful to
+    // do and can nudge the whole page by a few pixels, which looks like the header overlapping
+    // the title on first load. Only scroll once there's an actual conversation to follow.
+    if (messages.length === 0) return;
+    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages]);
 
   async function ask(question: string) {

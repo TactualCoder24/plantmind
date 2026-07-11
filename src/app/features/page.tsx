@@ -122,7 +122,7 @@ export default function FeaturesPage() {
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-10">
       <div className="space-y-2">
         <h1 className="text-lg font-display font-semibold text-text flex items-center gap-2">
-          <Sparkles size={18} className="text-accent" /> Everything PlantMind Does
+          <Sparkles size={18} className="text-accent" /> Everything Innfetch Does
         </h1>
         <p className="text-sm text-text-muted max-w-2xl">
           A full tour of what's built — what's genuinely agentic, what's rule-based, and what's

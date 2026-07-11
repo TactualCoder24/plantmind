@@ -38,7 +38,7 @@ function toGeminiTools(): FunctionDeclaration[] {
  * Autonomous RCA agent: the model is given tools over the graph/document
  * store and decides for itself which to call, in what order, and when it
  * has enough evidence to produce a final root-cause report. This is the
- * one part of PlantMind that is agentic in the strict sense (autonomous
+ * one part of Innfetch that is agentic in the strict sense (autonomous
  * multi-step tool use), as opposed to /chat (single-pass RAG) or
  * /compliance (fixed rule traversal).
  *

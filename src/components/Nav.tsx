@@ -44,7 +44,7 @@ export default function Nav() {
         <div className="flex items-center gap-8 min-w-0">
           <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text shrink-0">
             <Logo size={28} />
-            PlantMind
+            Innfetch
           </Link>
           <nav className="flex items-center gap-1">
             {ITEMS.map((item) => {
@@ -107,7 +107,7 @@ export default function Nav() {
       <header className="md:hidden flex items-center justify-between border-b border-border bg-canvas px-4 py-3 sticky top-0 z-30 gap-2">
         <Link href="/" className="flex items-center gap-2 font-display font-semibold text-text shrink-0">
           <Logo size={24} />
-          PlantMind
+          Innfetch
         </Link>
         <div className="flex items-center gap-1.5">
           <select
@@ -143,24 +143,28 @@ export default function Nav() {
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-canvas border-t border-border flex items-center overflow-x-auto py-1.5">
-        {ITEMS.map((item) => {
-          const active = pathname === item.href;
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-md text-[10px] shrink-0 whitespace-nowrap ${
-                active ? "text-accent" : "text-text-muted"
-              }`}
-            >
-              <Icon size={19} />
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="md:hidden fixed bottom-0 inset-x-0 z-30 bg-canvas border-t border-border">
+        <nav className="flex items-center overflow-x-auto py-1.5 px-1">
+          {ITEMS.map((item) => {
+            const active = pathname === item.href;
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex flex-col items-center gap-0.5 px-3 py-1.5 mx-0.5 rounded-lg text-[10px] shrink-0 whitespace-nowrap ${
+                  active ? "text-accent bg-accent/10" : "text-text-muted"
+                }`}
+              >
+                <Icon size={19} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+        {/* Fade hint so a scrollable-but-clipped last item doesn't look like a dead end */}
+        <div className="pointer-events-none absolute top-0 right-0 bottom-0 w-8 bg-gradient-to-l from-canvas to-transparent" />
+      </div>
     </>
   );
 }

@@ -5,7 +5,7 @@ export function Logo({ size = 28 }: { size?: number }) {
   return (
     <Image
       src={logoImg}
-      alt="PlantMind"
+      alt="Innfetch"
       width={size}
       height={size}
       className="rounded-md shrink-0"

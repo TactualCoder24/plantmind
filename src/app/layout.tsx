@@ -25,7 +25,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PlantMind — Unified Asset & Operations Brain",
+  title: "Innfetch — Unified Asset & Operations Brain",
   description: "AI for industrial knowledge intelligence: ingestion, knowledge graph, and cited copilot for heavy industry.",
 };
 

@@ -1,4 +1,4 @@
-# PlantMind — Build TODO
+# Innfetch — Build TODO
 
 Living checklist. Updated as work progresses — see "Log" at the bottom for a running diary.
 
@@ -309,6 +309,40 @@ issue I can't fix from here. Checklist:
       and confirmed the real click path works correctly — worth noting since it's a reminder that
       broad text selectors in UI tests can produce false negatives that look like product bugs.
 
+## Done — rebrand to Innfetch, real bug fix, visibility pass (this session)
+
+- [x] **Renamed the product from PlantMind to Innfetch**, everywhere it's user-visible: nav
+      brand text, page titles/metadata, landing page copy, login page, `/features`, `README.md`,
+      `ARCHITECTURE.md`, `TODO.md`, this file, and `package.json`'s `name` field. Left internal
+      infrastructure identifiers unchanged on purpose — the `plantmind-state` Supabase Storage
+      bucket and the `plantmind-role`/`plantmind-theme` localStorage keys — since those aren't
+      user-visible and renaming them would orphan already-provisioned data for no benefit.
+- [x] **Real logo added** — `src/logo.png` (user-supplied), wired through a new `Logo` component
+      (`src/components/Logo.tsx`, `next/image` over the static import), replacing the "PM" text
+      badge across the nav (desktop + mobile) and `/login`.
+- [x] **Found and fixed a real mobile bug, not just a screenshot artifact.** On `/chat`, the page
+      title and subtitle rendered clipped behind the sticky mobile header. Traced it with
+      `getBoundingClientRect()` rather than guessing: `<main>` was rendering 8px above the
+      viewport's scroll position, while the sticky header correctly stayed pinned at `top: 0` —
+      meaning the page had auto-scrolled slightly, sliding page content partway under the sticky
+      header. Root cause: the `scrollIntoView({ behavior: "smooth" })` effect that follows new
+      chat messages was also firing on initial mount with zero messages, when there was nothing
+      to scroll to. Fixed by skipping that effect when the message list is empty. Verified via the
+      same `getBoundingClientRect()` check post-fix: `<main>` now sits at exactly `top: 53`
+      (the header's real height), title and subtitle both fully visible.
+- [x] **Mobile bottom nav polish** — the active tab now gets a visible background pill (previously
+      just a text-color change, easy to miss at a glance), and a right-edge fade gradient hints
+      that the bar scrolls horizontally now that it holds 8 items.
+- [x] **Visibility/contrast pass on the design tokens** (`globals.css`) — light-mode card and
+      divider borders were barely visible against a near-white surface (`oklch(89%)` border on an
+      `oklch(100%)` card); darkened borders and `--text-muted`/`--text-secondary` a few points in
+      both themes, and added a visible `:focus-visible` outline on interactive elements globally
+      (previously relied entirely on hover states, invisible for keyboard navigation).
+- [x] Full mobile audit via real device-width screenshots (not just responsive-breakpoint review)
+      across all 10 pages, confirming everything else — role/feature grids, cards, filter chips,
+      the document viewer modal, proposal cards — already reflows correctly at 375px; the chat
+      header issue above was the only genuine bug found.
+
 ## Not started / stretch (incl. new feature ideas)
 
 Everything not yet built, in one list. What's left after this session is either genuinely
@@ -444,3 +478,17 @@ out of scope for an app with this data model, or needs an input I don't have acc
   platform-trust strip (Auth, persistent storage, audit trail, feedback loop). `/features` (added
   last session) already covers the exhaustive version; the landing page now previews enough of it
   to not feel thin without duplicating it wholesale.
+- User asked for a full rebrand to "Innfetch," a mobile-responsiveness pass, and better visibility.
+  Renamed the product everywhere user-visible (left internal Supabase bucket/localStorage key
+  names alone — infra identifiers, not user-facing, and renaming them would've orphaned the
+  already-seeded data for zero benefit). Wired in the user-supplied logo, replacing the "PM" text
+  badge. Did a real mobile audit — screenshots at 375px across all 10 pages, not just a code
+  review — and found one genuine bug: `/chat`'s title rendered clipped behind the sticky mobile
+  header, caused by a `scrollIntoView` effect firing on initial mount with no messages to scroll
+  to, nudging the page a few pixels. Confirmed the exact mechanism with `getBoundingClientRect()`
+  before fixing it, and confirmed the fix the same way rather than eyeballing a screenshot.
+  Everything else on mobile — grids, cards, modals, proposal cards — already reflowed correctly.
+  Darkened border and muted-text tokens for better visibility on light-mode cards (previous
+  borders were nearly invisible against a near-white surface), added a visible keyboard-focus
+  outline globally, and gave the mobile bottom nav's active tab a background pill plus a
+  scroll-hint fade now that it holds 8 items. Full rebuild clean.

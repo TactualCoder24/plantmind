@@ -81,7 +81,7 @@ export default function LoginPage() {
               <Logo size={32} />
             </Link>
             <h1 className="font-display text-xl font-semibold text-text">
-              {mode === "signin" ? "Sign in to PlantMind" : "Create your PlantMind account"}
+              {mode === "signin" ? "Sign in to Innfetch" : "Create your Innfetch account"}
             </h1>
             <p className="text-sm text-text-muted">Unified asset &amp; operations brain</p>
           </div>

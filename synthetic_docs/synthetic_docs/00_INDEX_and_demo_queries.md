@@ -1,4 +1,4 @@
-# PlantMind Demo Corpus — Index
+# Innfetch Demo Corpus — Index
 
 18 synthetic documents covering 4 equipment units with a deliberately interconnected failure history, so cross-document RAG and knowledge-graph queries have a real, traceable answer.
 

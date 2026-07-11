@@ -1,4 +1,4 @@
-# PlantMind — Architecture
+# Innfetch — Architecture
 
 Six layers, mapped to what's actually built in this repo vs. still open. See `TODO.md` for the
 live task list and `README.md` for the quick-start.

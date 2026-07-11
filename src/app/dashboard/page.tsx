@@ -122,7 +122,7 @@ export default function Dashboard() {
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 space-y-8">
       <div className="space-y-2">
         <p className="text-xs uppercase tracking-wide text-accent font-medium">{ROLE_LABELS[role]} view</p>
-        <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">PlantMind</h1>
+        <h1 className="text-2xl md:text-3xl font-display font-semibold tracking-tight">Innfetch</h1>
         <p className="text-text-muted max-w-2xl text-sm md:text-base">
           One place for your plant's equipment specs, work orders, procedures, inspection reports
           and regulations — ask a question in plain language and get an answer with the source

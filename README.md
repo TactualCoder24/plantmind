@@ -1,5 +1,5 @@
 # Innfetch — Unified Asset & Operations Brain
-
+(previously PlantMind)
 AI for industrial knowledge intelligence. Ingests heterogeneous plant documents (equipment specs,
 work orders, SOPs, inspection reports, incident reports, regulatory excerpts, emails), links them
 into a knowledge graph, and exposes them through a cited, role-aware conversational copilot —

@@ -15,7 +15,7 @@ spans multiple documents and none of them alone contains it. Innfetch pairs a **
 (equipment ↔ procedures ↔ personnel ↔ regulations ↔ incidents) with **RAG over chunked, embedded
 documents**, so the copilot can synthesize both keyword-relevant text *and* graph-traced
 relationships into one cited answer.
-
+(Claude has been for api to answer quries sometimes gemini also thats why in coauthors) 
 ## Architecture
 
 ```
